@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kita-Bücherei</title>
+<meta name="theme-color" content="#FFC83D">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Bücherei">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="config.js"></script>
+<style>
+/* VOICE: fröhlich und warm wie ein Gruppenraum, aber aufgeräumt – ein Werkzeug für Erzieher:innen
+   IDEA: das Bücherregal der Kita – jedes Buch ein bunter Buchrücken, Lücken heißen „ausgeliehen“
+   PICTURE: Regalbrett mit Buchrücken in Kategorie-Farben auf sonnengelbem Kopfband, daneben die Zahlen
+   COLOUR and TYPE: Sonnengelb dominiert, Himmelblau für Aktionen, Himbeere für Überfälliges; Baloo 2 + Nunito
+   LAYOUT: gelbes Band mit Regal, Zahlen und großen Knöpfen; Reiter; ruhige Listen bis 980px, Bottom-Sheets */
+:root{color-scheme:light dark;
+--bg:light-dark(#FFFDF6,#16132A);--card:light-dark(#FFFFFF,#221E3B);--ink:light-dark(#2A2342,#F3EFFF);--soft:light-dark(#6B6488,#B8B0D8);--line:light-dark(#EFE7D3,#383258);
+--sun:light-dark(#FFC83D,#E9A912);--onsun:#2A2342;--sky:light-dark(#2F7DF6,#4D8FF8);--skyD:light-dark(#1A5CCB,#2E6AD0);--berry:light-dark(#E8365F,#FF5C80);--leaf:light-dark(#23964A,#4CCB72);--chip:light-dark(#FFF4D2,#2E2950);--tint:light-dark(#EAF2FF,#23305A)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 Nunito,system-ui,sans-serif;overflow-x:clip}
+body.lock{overflow:hidden}
+h1,h2,h3{font-family:"Baloo 2",Nunito,sans-serif;line-height:1.05;margin:0;text-wrap:balance}
+.wrap{max-width:980px;margin:0 auto;padding:0 max(4vw,16px)}
+.vh{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;clip:rect(0 0 0 0)}
+.top{background:var(--sun);color:var(--onsun);padding:22px 0 26px;position:relative}
+.top::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:14px;background:radial-gradient(circle at 10px -2px,var(--sun) 11px,transparent 12px) 0 0/20px 14px repeat-x}
+.hrow{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.top h1{font-size:clamp(32px,7vw,46px);font-weight:800}
+.pill{font-size:13px;font-weight:700;background:rgba(255,255,255,.55);border-radius:999px;padding:4px 12px;white-space:nowrap}
+.pills{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.pill.help{background:var(--onsun);color:#fff;text-decoration:none;padding:9px 16px;font-size:14px}
+.parentonly{display:none}body.parent .parentonly{display:block}body.parent .staff,body.parent nav.tabs{display:none!important}body.parent .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+.scanhint{margin:10px 2px 0;font-size:14px;font-weight:700;opacity:.8}
+.steps{list-style:none;margin:0;padding:0;display:grid;gap:12px;counter-reset:s}
+.steps>li{counter-increment:s;background:var(--card);border:2px solid var(--line);border-radius:20px;padding:16px 16px 16px 66px;position:relative}
+.steps>li::before{content:counter(s);position:absolute;left:14px;top:14px;width:38px;height:38px;border-radius:50%;background:var(--c,var(--sun));color:#fff;display:grid;place-items:center;font:800 20px "Baloo 2",sans-serif}
+.steps h3{font-size:21px;margin-bottom:6px}.steps p{margin:6px 0}.steps ul{margin:6px 0;padding-left:20px}.steps li li{margin:3px 0}
+.intro{font-size:17px;margin:0 0 16px}
+.tipbox{background:var(--chip);border-radius:20px;padding:14px 16px;margin-top:16px}.tipbox h3{font-size:20px;margin-bottom:4px}
+.hero{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);gap:16px;margin-top:16px}
+.regal{background:var(--card);color:var(--ink);border-radius:22px;padding:14px 14px 10px;box-shadow:0 6px 0 rgba(42,35,66,.12)}
+.fig{position:relative;min-height:130px}.fig>svg{position:absolute;inset:0;width:100%;height:100%}
+.legend{font-size:13px;color:var(--soft);margin:6px 2px 0}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.stat{background:rgba(255,255,255,.6);border-radius:18px;padding:10px 12px;display:flex;flex-direction:column;justify-content:center}
+.stat b{font:800 clamp(28px,6vw,38px)/1 "Baloo 2",sans-serif}.stat span{font-size:13px;font-weight:700}
+.stat.late b{color:#C8204A}
+.actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:46px;padding:0 20px;border:0;border-radius:999px;font:800 16px Nunito,sans-serif;cursor:pointer;background:var(--card);color:var(--ink);box-shadow:0 4px 0 rgba(42,35,66,.18);transition:transform .08s;text-decoration:none;white-space:nowrap}
+.btn:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(42,35,66,.18)}
+.btn:disabled{opacity:.45;cursor:default}
+.btn svg{width:22px;height:22px;flex:none}
+.btn.big{min-height:56px;font-size:18px;padding:0 26px}
+.btn.primary{background:var(--sky);color:#fff;box-shadow:0 4px 0 var(--skyD)}
+.btn.ok{background:var(--leaf);color:#fff;box-shadow:0 4px 0 #17703A}
+.btn.danger{background:transparent;color:var(--berry);box-shadow:none;border:2px solid currentColor}
+.btn.sm{min-height:44px;padding:0 16px;font-size:15px}
+.btn.wide{width:100%}
+.btn.light{background:var(--chip)}
+:focus-visible{outline:3px solid var(--sky);outline-offset:2px}
+nav.tabs{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:2px solid var(--line)}
+nav.tabs .wrap{display:flex;gap:6px;overflow-x:auto;padding-top:14px;padding-bottom:10px}
+nav.tabs a{flex:none;text-decoration:none;color:var(--ink);font-weight:800;padding:9px 16px;border-radius:999px;min-height:44px;display:flex;align-items:center;gap:6px}
+nav.tabs a.on{background:var(--ink);color:var(--bg)}
+nav.tabs a i{font-style:normal;font-size:12px;background:var(--berry);color:#fff;border-radius:999px;padding:0 7px;line-height:20px}
+main{padding:20px 0 36px}
+.brand{display:flex;align-items:center;gap:14px}
+.logo{height:88px;width:auto;background:#fff;border-radius:18px;padding:5px 7px;box-shadow:0 4px 0 rgba(42,35,66,.14);flex:none}
+.sub{margin:4px 0 0;font-weight:700;font-size:15px}
+.top::before{content:"";position:absolute;top:0;left:0;right:0;height:7px;background:linear-gradient(90deg,#E53935 0 16.7%,#FB8C00 0 33.3%,#FFE14D 0 50%,#43A047 0 66.7%,#1E88E5 0 83.3%,#8E24AA 0)}
+.foot{background:var(--chip);border-top:7px solid transparent;border-image:linear-gradient(90deg,#E53935 0 16.7%,#FB8C00 0 33.3%,#FDD835 0 50%,#43A047 0 66.7%,#1E88E5 0 83.3%,#8E24AA 0) 1;padding:28px 0 90px;font-size:15px}
+.fgrid{align-items:start;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr) minmax(0,1fr);gap:24px}
+.fbrand{display:flex;gap:14px;align-items:center}.fbrand .logo{height:64px;box-shadow:none}.fbrand b{display:block;font:800 18px/1.2 "Baloo 2",sans-serif}.fbrand span{color:var(--soft)}
+.fcol h3{font-size:19px;margin-bottom:6px}.fcol p{margin:0 0 8px}.foot a{color:var(--sky);overflow-wrap:anywhere}
+.foot summary{font:800 19px "Baloo 2",sans-serif;cursor:pointer;min-height:44px;display:flex;align-items:center;gap:8px;list-style:none}.foot summary::-webkit-details-marker{display:none}.foot summary::after{content:"+";width:26px;height:26px;border-radius:50%;background:var(--card);display:grid;place-items:center;font-size:18px}.foot details[open] summary::after{content:"–"}
+@media(max-width:760px){.fgrid{grid-template-columns:minmax(0,1fr);gap:16px}}
+@media(max-width:600px){.logo{height:66px}.top h1{font-size:30px}.sub{font-size:13px}}
+.tool{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:12px}
+.tool input{flex:1 1 220px}
+input,select,textarea{font:16px Nunito,sans-serif;color:var(--ink);background:var(--card);border:2px solid var(--line);border-radius:14px;min-height:46px;padding:0 14px;width:100%}
+textarea{padding:10px 14px;min-height:90px}
+.scroll{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;margin-bottom:10px}
+.chipb{flex:none;border:2px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;min-height:40px;padding:0 14px;font:700 14px Nunito,sans-serif;cursor:pointer;display:inline-flex;align-items:center;gap:7px}
+.chipb.on{border-color:var(--ink);background:var(--ink);color:var(--bg)}
+.dot{width:12px;height:12px;border-radius:50%;background:var(--c);flex:none}
+.seg{display:flex;background:var(--chip);border-radius:999px;padding:4px;gap:4px}
+.seg button{border:0;background:none;color:var(--ink);font:800 14px Nunito,sans-serif;border-radius:999px;padding:0 14px;min-height:38px;cursor:pointer}
+.seg button.on{background:var(--card);box-shadow:0 2px 0 rgba(42,35,66,.12)}
+.list{display:grid;gap:10px}
+.row{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:center;background:var(--card);border:2px solid var(--line);border-radius:18px;padding:10px 12px;cursor:pointer}
+.rt{display:block;font-weight:800;line-height:1.25}.rs{display:block;font-size:14px;color:var(--soft)}
+.th{width:44px;height:58px;border-radius:7px;object-fit:cover;display:grid;place-items:center;flex:none;font:800 22px "Baloo 2",sans-serif;color:#fff}
+.th.sp{background:linear-gradient(90deg,rgba(0,0,0,.14) 0 5px,transparent 5px),var(--c)}
+.th.big{width:96px;height:128px;font-size:44px;border-radius:10px}
+.badge{display:inline-block;font-size:13px;font-weight:800;border-radius:999px;padding:1px 10px;margin-top:4px;white-space:nowrap}
+.badge.ok{background:light-dark(#DDF5E4,#1F4A2E);color:light-dark(#17703A,#8BE3A6)}
+.badge.due{background:light-dark(#FFF0C2,#4A3B10);color:light-dark(#8A5B00,#FFD970)}
+.badge.late{background:light-dark(#FFE0E7,#55202F);color:light-dark(#B81C44,#FF9FB4)}
+.badge.out{background:var(--tint);color:var(--sky)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px}
+.card{background:var(--card);border:2px solid var(--line);border-radius:18px;padding:10px;cursor:pointer;display:flex;flex-direction:column;gap:6px}
+.card .cv{aspect-ratio:3/4;width:100%;border-radius:10px;object-fit:cover;display:grid;place-items:center;font:800 46px "Baloo 2",sans-serif;color:#fff}
+.card .cv.sp{background:linear-gradient(90deg,rgba(0,0,0,.14) 0 9px,transparent 9px),var(--c)}
+.card b{line-height:1.2;font-size:15px}.card small{color:var(--soft);font-size:13px;line-height:1.3}
+.av{width:44px;height:44px;border-radius:50%;background:var(--c);color:#fff;display:grid;place-items:center;font:800 20px "Baloo 2",sans-serif}
+.empty{text-align:center;padding:36px 16px;color:var(--soft)}.empty b{display:block;color:var(--ink);font:800 22px "Baloo 2",sans-serif;margin-bottom:4px}
+.box{background:var(--card);border:2px solid var(--line);border-radius:20px;padding:16px;margin-bottom:16px}
+.box h2{font-size:24px;margin-bottom:10px}
+.hint{font-size:14px;color:var(--soft);margin:6px 0 0}
+.addrow{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}.addrow input{flex:1 1 160px}
+.catrow{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}
+.catrow span.n{flex:1;font-weight:700;overflow-wrap:anywhere}.catrow small{color:var(--soft);white-space:nowrap;flex:none}
+.ib{border:0;background:var(--chip);color:var(--ink);width:40px;height:40px;border-radius:12px;cursor:pointer;display:grid;place-items:center;flex:none}
+.ib svg{width:18px;height:18px}
+#modal{position:fixed;inset:0;z-index:20;background:rgba(22,18,44,.55);display:flex;align-items:flex-end;justify-content:center}
+#modal[hidden],#ask[hidden],#busy[hidden]{display:none}
+.sheet{background:var(--card);width:100%;max-width:560px;max-height:92vh;overflow:auto;border-radius:26px 26px 0 0;padding:22px 20px 28px;position:relative;animation:up .22s ease-out}
+@keyframes up{from{transform:translateY(40px);opacity:0}}
+@media(min-width:700px){#modal{align-items:center}.sheet{border-radius:26px}}
+@media(prefers-reduced-motion:reduce){.sheet{animation:none}.btn{transition:none}}
+.sheet h2{font-size:28px;padding-right:44px}.sheet h3{font-size:20px;margin:18px 0 8px}
+.x{position:absolute;top:14px;right:14px;width:44px;height:44px;border-radius:50%;border:0;background:var(--chip);color:var(--ink);cursor:pointer;display:grid;place-items:center}
+.x svg{width:20px;height:20px}
+.bhead{display:flex;gap:16px;align-items:flex-start;margin-bottom:14px}
+.meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.meta>span{font-size:13px;font-weight:700;background:var(--chip);border-radius:999px;padding:2px 10px}
+.status{border-radius:20px;padding:14px;display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between}
+.status.in{background:light-dark(#E3F7E9,#1C3D28)}.status.out{background:var(--tint)}.status.late{background:light-dark(#FFE6EC,#4A1E2A)}
+.status b{display:block;font:800 22px "Baloo 2",sans-serif}.status span{font-size:14px}
+.hist{list-style:none;margin:0;padding:0}.hist li{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);font-size:15px}
+.hist li span:last-child{color:var(--soft);white-space:nowrap}
+.mfoot{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}
+.field{margin-top:12px}.field label{display:block;font-weight:800;font-size:14px;margin-bottom:4px}
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
+.inrow{display:flex;gap:8px}.inrow input{flex:1}
+.coverrow{display:flex;gap:14px;align-items:center;margin:14px 0 4px;background:var(--chip);border-radius:18px;padding:12px}
+.coverrow .th.big{background:var(--line);color:var(--soft);font-size:14px;font-family:Nunito;text-align:center;padding:6px}
+.coverrow .btns{display:flex;flex-wrap:wrap;gap:8px}
+.kpick{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;max-height:220px;overflow:auto;padding:2px}
+.kpick button{border:2px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;min-height:44px;padding:0 14px 0 6px;display:flex;align-items:center;gap:8px;font:700 15px Nunito,sans-serif;cursor:pointer}
+.kpick button .av{width:32px;height:32px;font-size:15px}
+.kpick button.on{border-color:var(--sky);background:var(--tint)}
+.kpick small{color:var(--soft);font-weight:600}
+.newkid{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}.newkid input{flex:1 1 130px}
+#ask{position:fixed;inset:0;z-index:30;background:rgba(22,18,44,.55);display:grid;place-items:center;padding:16px}
+#ask .sheet{border-radius:24px;max-width:420px;animation:none}
+#ask p{font-size:17px;font-weight:700;margin:0 0 16px}
+#busy{position:fixed;inset:0;z-index:40;background:rgba(22,18,44,.45);display:grid;place-items:center}
+#busy div{background:var(--card);border-radius:22px;padding:22px 26px;display:flex;align-items:center;gap:14px;font-weight:800}
+.spin{width:28px;height:28px;border-radius:50%;border:4px solid var(--line);border-top-color:var(--sky);animation:sp 0.8s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+#toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:50;background:var(--ink);color:var(--bg);border-radius:999px;padding:10px 10px 10px 20px;display:flex;align-items:center;gap:12px;font-weight:700;max-width:calc(100% - 24px);box-shadow:0 8px 24px rgba(0,0,0,.25)}
+#toast[hidden]{display:none}#toast button{border:0;background:var(--sun);color:var(--onsun);border-radius:999px;min-height:36px;padding:0 14px;font:800 14px Nunito,sans-serif;cursor:pointer}
+#toast button[hidden]{display:none}
+.note{background:var(--chip);border-radius:16px;padding:10px 14px;margin-top:12px;font-size:15px}
+textarea.copy{min-height:180px;font-size:13px;font-family:ui-monospace,monospace}
+@media(max-width:600px){.hero{grid-template-columns:minmax(0,1fr)}.two{grid-template-columns:minmax(0,1fr)}.btn.big{width:100%}.actions .btn{flex:1 1 auto}}
+.pill.acct{border:0;cursor:pointer;font:800 14px Nunito,sans-serif;padding:9px 16px;background:#fff;color:var(--onsun);min-height:40px}
+.notice{background:var(--tint);border-radius:18px;padding:14px 16px;margin-bottom:16px;font-weight:600}.notice .mfoot{margin-top:10px}
+.err{color:var(--berry);font-weight:700;min-height:1.3em;margin:10px 0 0}
+.cam{position:relative;background:#000;border-radius:18px;overflow:hidden;aspect-ratio:4/3;margin-top:12px}.cam video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.frame{position:absolute;left:10%;right:10%;top:28%;bottom:28%;border:3px solid #FFC83D;border-radius:14px;box-shadow:0 0 0 999px rgba(0,0,0,.35)}
+.ver{color:var(--soft);font-size:13px;margin-top:10px}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <div class="hrow"><div class="brand"><img class="logo" src="data:image/jpeg;base64,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" alt="Logo der Ev. Kita „Unterm Regenbogen“"><div><h1>Kita-Bücherei</h1><p class="sub">Ev. Kita „Unterm Regenbogen“ · Enger</p></div></div><span class="pills"><a class="pill help staff" href="#anleitung">So geht's</a><span class="pill" id="mode">Lädt …</span><button class="pill acct" id="acct" data-act="account">Team-Anmeldung</button></span></div>
+    <div class="hero">
+      <div class="regal"><div class="fig"><svg id="shelf" aria-label="Bücherregal"></svg></div><p class="legend">Bunt = im Regal · gestrichelt = gerade ausgeliehen</p></div>
+      <div class="stats">
+        <div class="stat"><b id="sIn">0</b><span>im Regal</span></div>
+        <div class="stat"><b id="sOut">0</b><span>ausgeliehen</span></div>
+        <div class="stat staff" id="sLateBox"><b id="sLate">0</b><span>überfällig</span></div>
+      </div>
+    </div>
+    <div class="actions staff">
+      <button class="btn big primary" data-act="scan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M7 8v8M10 8v8M13 8v8M17 8v8"/></svg>Buch scannen</button>
+      <button class="btn big" data-act="newbook"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Buch ohne Barcode</button>
+    </div>
+    <p class="scanhint staff">Die Kamera liest den Barcode auf der Rückseite, der Titel wird automatisch gesucht.</p>
+  </div>
+</header>
+<nav class="tabs"><div class="wrap" id="tabs"></div></nav>
+<main><div class="wrap"><div class="notice" id="notice" hidden></div><div id="view"></div></div></main>
+<footer class="foot">
+  <div class="wrap fgrid">
+    <div class="fbrand"><img class="logo" src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wCEAAkGBxMTEhUTExMVFhUXFhUWFxYVGBUYGBUYFRYZFxgYGBcdHSggGBolGxcXIjEhJSkrLi4uFyAzOTMsNygtLisBCgoKDg0OGxAQGy0mICY3NS8vLTAyLTAyLS0yLS0wLS0uLTUxNS8vLy8vLS0vLS8yLS84LS8tLS8vLS0tLS0tLf/AABEIANUA7QMBEQACEQEDEQH/xAAbAAEAAgMBAQAAAAAAAAAAAAAABAUCAwYBB//EAEUQAAIBAgMEBwQGCQIFBQAAAAECAAMRBBIhBTFBUQYTImFxgZEjMkKhFFJicrHBBxUkM4KSstHwo+EWc6LC0jRDg5Oz/8QAGwEBAAIDAQEAAAAAAAAAAAAAAAQFAgMGAQf/xAA5EQACAQICBQoEBgIDAQAAAAAAAQIDBBEhBRIxQVETYXGBkaGxwdHwBiIyMxQjNELh8SRSgpLCFf/aAAwDAQACEQMRAD8A+4wBAEAQBAEAQBAEAQBAEAQBAEAQBAMK1ZUGZmCgbyxAA8zPG0tp7GLk8EsWc/jenWApaHEKx5Uwz/NQR85plc0lvLKloa9q5qm+vLxKup+lDBDcKzeCD82E1u9pLiTY/DN8/wDVdZsofpNwLbzVX71M/wDaTPVeUmYz+G76O5PrXngXOz+lmCrWFPE0yTuVjkY/wtYzbGtTlsZX19G3VD66b6dq7UXIN5tIJ7AEAQBAEAQBAEAQBAEAxdrAnkIBDw+Ite9+f94B4+LbhpAMfpTc/kIBkmLYb9YB42LbwgGa408RAN9PEqdNx74BugCAIBpxmKSkheowRVFyzGwHnPG0lizOFOVSSjBYt7kfONtfpIqVX6nZ9Iux0DlSSe9Kf5t6SDO7berTR1Fr8PQpw5W9nqrhj4v07Tncbsuo7Z9pY3K2/qgTWqjuyL2KfrJNvoi8u/may9+8hX+JNHWC1LWGL47P5fXh0mpH2elgmFq1jzr1ct/4KY19Zd0vhaEVjVn77iguPjK9qP8ALwXR7ZOSq59zZNG3fh67/O+s3f8AxdHR+qou2JAen9JyeOtLvMMRWAHttlUgOYSvR/6rw9BWE8oTXc/Ayh8R6Tp5uUuvHzIRobOq/DXwx5qwr0x4g2f0kO4+FpJY05Y93vtLW1+NriL/ADYp++b0J+z6W0MKOswWIGJorvWmS+UfboN2k/h9ZSVrS7tHhJP373F3T0hojSiwqJRlx2Z9K8zrujH6R6NciniAKFQ6Ak+zY/ePuHub1ntK7jLKWTIF/wDD9a3TnS+ePeurf1dh3AMlnPnsAQBAEAQBAEAQBAEAq61PKbQDCAIAgCAIAgGyjVKm/wAoBtfGHgLfOAV22dvrhqRq1Xso0AAGZm4Ko4kzCpUjTjrSJNpaVbqqqVJZvu52fOAuL2zVzOerw6HT6q9yjTPUtx4X4bjXpVLmWLyidfKdpoSlqx+aq/efBc39kzFbPxFKo2EwdE0qYAzVtzVRa5Z69tFuT2V5HThOs0bbWNvRVWbTlw2vs39eXQcDpTSN7eVnyjyXUkvBePHE34Hoxh6etQms/IXSmD5dpvkDykyrfV6n0fKu1+iOfndUKbwj8z7F6vzOiwlOogtTRKK/ZVKY8zvMq69ahH5q08el+0eqV9UXyrUXVHxzM2DccSv/ANjn8BID0zo6OWsu41u3rv6q6/7Myp9Z8OIU93WH8G0mUNK6PqZa0e4yjRuo/RWT/wCT8yLtHBBx+0YdKg+uVAbyqpulnRqpZ0KjXXl2MTuLqkvz4Jrj/KOfxHRazdZgqrJUGopu2VvCnVFgfBreMsI6QerqXMU48V5r0NtGrSqv8p4S4PyZU4xqWJY0savUYgG30gLlueWIp8Ru7Ytw4St0hoGnWjy1q8eb049G3wOp0R8S3FjLk6uceD3enhzbyx6OdKK+zqowuNBNHTI/vZFPuujfHS7t48rTmadadGXJ1Nh1d5o230jS/FWeGtvXF863Px68T6xRqqyhlIKkAgjUEHUEHiJYnHNOLwazM4PBAEAQBAEAQBAMXcAXMAra1TMbwDCAIAgCAIAgCAIBznSjosMZUpM1VlRLhkAvmBN9Dfsnhex4SPWocq029hcaN0s7GnOMYJuWx8PUvsLhkpoqIoVFFgo3ATekorBFVVqTqzc5vFsh4uhUd7bk+XpxMm0atOnDH9xQ3trc3NbU2Q99rPa2EKKOqF2vqTa9u6+glTpWveTpf4+3Hm2dZudjyFP8hYy4vDHq4Fe9AXvUqXPJe0fXcJx9WhTUsbqtjLgvmfbsNlLQ9er81Rnl6P1XPiQPwmrlLBfsm+lpE2Ogqe+RkooHf1inuysPTfPdbR88sJx7GYT0DH9svfYbqFB11oVQ3NRo3mh3yTRpVqfzWdXW5tj/AOr2kGpo+5ts4PFe92w1NUVzZlFN+YFlJ+0vwmX+jviVqXJXSwfH14e9hWVKNKtk1qS7n0rcRNr7NWuOrr6OPcq72Tlf66d07K3run+ZRzT2rc/RiFxKEuRuup716r30cuadr7Pxuig+xrb+oZvdZT8VFuI4d1jbLSWj6V/R5ej9XvvXf2HRaI0tW0bXX+u9bmvTg93aWnQHbtTCYg7PxWgzWpknRWO4A8Ue9x3nv05G3qOnLkp9R2umLKnd0Ff23/Lo49K3/wAH1SWByAgCAIAgCAIAgGFcdk+BgFXAEAg7crMmHrOhyslN2U6GxVSRoQRwgGp8YUux6xlvSU51C5c7Fcw7IJGq35W8YBnidpZAWKaDrNSwAPV7wL6lib2FvhOo0uBhidrZc9qZYJRWuTcC6HNp97snTd3iAMTtcKWAQtl6kHUAk1zlSwtqLkXPja9rQDKltVXcIASC70rg6hkDXJHwrdSA3O2msAhbO2k3V0Wc1GJwjVmC5TnKdXfS18/a0sbanugE2ltVWCZcrGoxVMjhkOVc7EsBoBqCLXvw4wDRVx1RapORrDD9YaZZdCrkHXUXIGn5QDbW20gJspayU3I+K1S9gq/E1gSRpw3wCTj6DOAFNtdd+srNJ2le5goUpYLfzr3uN1GpGDxkjXQ2Yi7+0e/d6TRbaDtqSxn8z59nZ64mc7mctmRLWio3KB5CWcbajFYRgl1Ghzk9rPDQQ70U+IH48JjUs7eovmguw9VSS2M07R2Ko1psQeAJuPI7xKa60DH6rd4Pg9nU9qJELp7JlY7Zjkq6NuD8R97mO+VTqco+QvFhJbJ7108Vz/2R73R1O4jrw2niXHsqmn1W+qeGvFTLXROk6tjW/DV9m7y6nu4dGzmZ0tb8itk1sfB+jK7bmyvpFM0yPbU7mmefE0yeR4d9p9BtrjkJqovpe316t5rtZyeNtU+pfT5rr3HJYyn9KwhbX6RhANfifD348b0z8jKz4isFCSrwWT9/z2ne/COldSo7Wq8pePvJ9R9Q6Bbe+l4RXY+0T2dTvZQO15gg+JPKVtvU5SGO8w0tY/g7lwX0vNdH8bDo5uKwQBAEAQBAEA04isALHeRugFdAEA0Y3CirTem18rqVa1r2YWIvbTSAYVMCGDK7OwZChByjQ77ZVGvf3QDXW2WjZdWGWm1LQi5R7Zgbg78oNxY98A8OylIYFnOakKJ933Bf7O/tNr3wCHidnVc7MjMGCotJ7oQMoN+sDC+8n3RqOR1gFjRwIQsVZwCzPlBGUM18zDS+8k2JIud0A00dkIoQBn7FJqK6jRGynfbf2F1+z43A9OykvmuwfP1mcZQ2bJ1Z0tlsVFrW79+sAzfZ6kklnuaZpnVfdJJJ3b7kwDyns1VIKs4ORKbWI7apfLm00IudVsdYBNgCAIAgCARsbhQ6/aG4/l4Su0jYRu6eH7lsfl0G6jVdN8xU5c6FT76XtzIG9fKctFO4oujP7lPZzpbY9W4jaXs1Up8rHavfv+QXzIH+JSFJ/pb8p2Pw5f8A4m35Kbzjl76vBnMXSc6ca8fqjk/J+RzG1rYbHJXt7KsLuOFm7FZfnm8xOwpR/E2cqEtscl/59CwpV9WcK8csc+vf2PM2fo/qHB7TrYMnsvmVe8oM9M+dMt6icPbfl1nTZ9L0yleaOp3a2rb15PvwPrMsTjhAEAQBAEAQCsxFS7EwDXAEA8ZrC53DWD1LHI5/oltmriOs6wLZctiot72bTfrawkS1rzq46xY6RtKdDV1MczoZLK0QBAEAQBAEAQBAEAQBAEAQCp2iMlVXHHU+Wh+U5TS0fwt7C4jv29W3tROoPXpuDNNOnaq9PgwIHpmWZ6LmrTSjprY/7Xdkck6WFWpQ44+qOf6XUc+FDcadQfy1BlI/mCz6dYS1bnD/AGXeiNZy1reUf9X3Mpdo4opitn4q/vJQznmab9XU9VFpyWlafI37w2Y++4+qaAqfidD1aL2pPwy70fbZvOTEAQBAEAQDViKZYWB/3gFaYAgCARNr1MtCq3KnUP8A0ma6rwhJ8xut461WK514lD+j9PY1DzqW/lRf/KRrFfI+ksdMP82K5vM6mTSoEAQDnsO1tpVAvxUVLjmwKgH0I9ZEjlctLgWU1jYxb3PLo/su62Lpp79RF+8yj8TJLnFbWQY0py+mLfUQavSHCrvrJ/Ddv6QZrdxSX7jdGxuJbIPwOf230pvUpfR6hCKbv2TZrkaEEa6A+siVrrGS1HlvLO10bhCXLRzezMsW6aYYcKh/hX82m13tLnIq0TX5u0w/43w31avon/nPPx1Pn7vUy/8AkV+K7/Qv8Di0qoKlM3Vtx8NCD3gyXCanHWjsK6rTlTk4S2o3zI1iAIAgFdtsdhT9r8Qf7TnviOP5EHz+TJdp9TIpPtaR5rT+YtK5yf42hPe1HwwOfvPlv8veeBV7fS+FxI5BD/LVWfUrd/5FJ9PgVdmsHVj7yZxHSI/seCPfih6VFI/Eyh+JVhd++CPqHwO8aFVPm/8AR9zwNfMovvtMTmZLBtEqDwQBAEAQBAK/GU7NfgYBogCAVvSRrYWt9wj10/Oabj7UuglWX6iHSQeg62wt+bufwH5TXZ/aJGlX/kYcyOgkorRAMKtQKpZjYKCSeQGpnjaSxZlGLk0lvOW6KJ19XE4hxo/YA7jqR5KEEhW35kpTe/IttIPkadOjHdn77ybT6H4UHVXPi5/K0zVlSRoelLh7Gl1Eyl0fwq7qCfxDN+N5tVvSX7UaJXtxLbNnMGgjbTFNUUIptlCgL2KZY3G7fIWqnc4JZL0LbXnGwcm3i/Nnarh0G5FHgollqrgUTqSe1szCDkPSMDHFnoE9PD2AIAgCAVm230Ud5PoLfnOa+I6nyQp8Xj5eZMs1m2aLe3RfqhR/Kt5FjDW0lTpL9qS7Fic7cS177Hh/ZTdIqtsJXP1jTX1qAn5Az6haxxuaa4Y+BV2LbjVn0d7OP6QUicPgKQ95hXYf/LVAX+mc98Ry17zBe8kfUfgxcnaVaj2f2z7Ha0HMY4krC1zexN4BNgCAIAgCAeMoOhgEWpg+R8jANBwzcvwgFJ0uuMJVvpoo9XUTRc/aZM0esbiPvcauhg/ZKfean/6MPymNp9pdfiZ6T/Uy6vBF3JJAEA5PpbtFqjDCUdWYjPb1C/meVvGQLqo5Pko7feXqXOjqCpxdxU2LZ6+SJWDqNRC4egufJ75t7zfF90X4zbDGCUI7jTUjGtjWqvDHZzLcWGJxwpMC9amqtuWowB03gHjYzbKah9TSI0KXKR+WLbW9E+nVVlDBgVIuGBBBHMETYmmsSM4tPVazOG6J1Osxz1OYqv8AzMPyaVlq9as5dJ0GkI8naKHQjvJaHPCAIAgCAIAgEfFUUPbYe7r6a+cg3ltbywr1V9Gfn1mXLulBvHIqcOSRUqnvHmx19B+Mq/hyk7i7ncz9t5+hzWtLkqtbq7dvYc300rEUqNEas7GoRx07CDzJb0n0rRyxqzqvYlh5s8t4OFvGO+Tx8l2nWU+j1C1DPTDPQVQjG+hUDkbHUX1nMXOrXqurJZ4tnV211Wt6Lo05YRawfOW08NBuwi3bw1gFjAEAQBAEAQBAKjbfSOhhSq1CczC4VRcgbrnkJpq14U/qJNvaVa+LgskUPSnpBh8RgqopVAW9n2TdW/epewO/TlI9xXhOk1F8PEm2dpWo3MXOOWefUyd0Owt8FSN+Dn/UabrX7S97yNpH9TLq8EWEkEI53pD0gyHqaHbrN2dNchP4t3cOPKRK9xq/JDNlnZ2OuuVq5QXf/Bu6NbC6gF37VZveO/LfUgHieZ4zK3t+TWL2mu9vOWerHKK7/e4qOkuNem5ooCie8SN9QtqTflwt3TXWk09Vf2S7OlGceUlm/Ap9uC+Ewotdi9YKOJFxcAfetI9f7cesl236io92CxOjxGbC7NCNo5XJbk1QksPIFvSSZ40rfB7fUr6SVxe6y2LPs2duRVdAR+0P3Um/rSR7H7j6PQm6Xf5K6fJney0OdEAQBAEAQBAI+Nw+dct7ag+khX9o7qi6algaLmi61PUTwPaSLSp6kBVBLE92pJm6ztVQpxpQz82e0qUaNNR3I4bYYOO2g2IIPV0yGAPdpSXx3t5GdZdtWVkqK+qW3z9CDR/Pr6+5e16n0Cc0WggErADUwCbAEAQBAEAQBAON6V4U0cSuMNIVqWTq6qEBsoue0AdOO/u4XkK4i4zVXDFbGWlnNVKToa2rLHFPjze/IoukCbPqUWrYdglUZfZare7AHsHkCT2dNJHrKhKGtDbw/gm2sruFVU6qxjx29/qRNk9I62HVUJWpStcJcXW511Gqm/Bp5SuJ0sFtRtuLCnXbaxUuPH16iyq7bxGLJp4VCi/E5OoB5tuXyuZudepWerTWBEjZ0LVa9d4vcve0uthbBp4cX96od7n8FHAfMyRRt40+niQbu9nXeGyPD1LeSCEc7s7atPGvUpNRBRLlWJvcXsOF1J36GRKVZVpOLWSLKvbTtIRmpZvave0uaeApKUIRb0xlQkXKg77E7r85JUIrDLYQZVpvHF7dvOcr0rqmviqWGXgRm8X1PomvmZAuXylRU179ouNHxVGhKu/f9sx6FKPpNe24KwHh1g/tFp9yXvee6TbdCGPvI7WWJRGFWqqjMxCgbyxAA8zPG0lizKMXJ4RWLK2p0kwqmxrL5Bm+YBml3NJfuJUbC4f7DfhdsUKhslVCTuF7E+ANjMo1qctjNdS1rU1jKLwNNPb1Fq5oBjnBte3ZLDeoPMTxXEHPU3mcrKrGlyrWXf0lpNxEEAQDVisOtRGpuLq6lWG7Qix1mdOpKnJTjtWZjKKlFxexkbZGyqeGTq6QIFyxJNyxPEnwAHlNlxc1LievNmNKlGmsIk6aDYIBMwCnU8DAJcAQBAEAQBAEAEQDi+nOysOtCpUSki1BkOZRl3uoNwNCSCd8h3VKCpuSWf8AJaaOuKrrRg5NrPwZo6N7Fw7UKdRqSszC5LXNzcjcTb5T2hRpumm1mL27rRrSgpYJHm0ujhVuuwjdXUHwDRW7hwHgdPCeVLZp61J4PgKF+pR5O4WMeO/33m/YvSIVG6qsvVVhpY6Bj3X3HuPleZUblSerPKRrubFwXKU3rR8Pf9lxjWIpuRvCMfRTJE/pZCpLGcVzo5f9HlLsVW5lF9AT/wB0hWCyky30zL5oo6TaeOWjSao25RoPrE7h5mTKlRQi5Mq6FF1qigt5zPQnCM9R8VU1JJCnmzG7kfh5mQrODlJ1Je+Ja6UqxhCNCHvh69hh0J/9RX8D/XPLP7kj3Sn2Ie9x1e0MWKVN6jblF7c+Q8zYSdUmoRcnuKejSdWagt5wuFweI2g5d2sgNrm+VfsovE/4TKyMKlxLFvL3sOhqVaFjDVis+99L98x0OG6HYZR2s7nvYj5LaS42VNbcWVk9K15P5cF1epzfSRcGns8Ol2B7Th3ZR3C5IY/h+ES4VGPywWfWWlk7qXz1nlwwWJt6DYQNiCx/9tSR95uyPlmntnDGpjwMdK1HGiore+4+gS1ObNOLxSUlL1GCqOJ/Acz3CYymorGRnTpzqS1YLFlBs3alXFYgGndMPSuTzqEggBvW9uFvCRadWVapisorvLKvbU7ahhPOcu7o9TpZMKoQBAN2Fphjr6c4BYwBAEAQBAEAQBAImMr20B8YBzvSsXwlXwU+jqZouftMmWDwuIjoof2Sl4N8naLb7SGkP1Mi2m8hlZtrYlPEL2tHHuuN47jzHd+E01qEaqz28SVa3c7d5Zreipwe1amHb6PjNVOiVt4I3do8R37xx5yPCrKm9Sr2k2rbU68eWttu+Pp7zNOyGqYE1EelUemxDJUpDMDpbXXS4t6TGlrW+KabXFGdyoXurKEkpLankR8SuI2hUAyNSoqd7Ai3M/ae3AbvUzGSqXEsMMEbKboWNNvHWm+HvJHZYTDrTRUQWVQAB/nGWEYqKUUUlSpKpJyltZyXQ0WxWIH3vlUkG0+7IudJfp6fvcdLtrBGtQqUxvYaeIIYfMCTK0NeDiVVrV5KrGfA5fZvSVcNRFFqL9YmYEaAXJJuTvG/lINO5VKGo4vFFtX0fK4qcrGS1WQ8RtbF4wlKakKdCqbv43P+w7phKtVr5R2c3mzfC2trRa83nxfki+2B0WSiQ9Wz1BqB8KeHM95kmhaKGcs34FdeaSlV+WGS72a8Xs2thq7YjDIKivfPS46m5K89ddNRc6TyVOdKbnTWKe1GVOvSuKSo1ng1sZFrdJ8U3Zp4Uq3eruR5WHzmDuqryUfE3Q0dbRznUxXUjVQ6O4nEMHxLlRyJBa3JVHZT/NJjG2q1HjUZnO/t7eOrQWPh6v3mdfgsIlJAlMWUfPmSeJlhCCgtWJS1asqsnObzN8yNYgCAWGFo5Rc7zAN8AQBAEAQDF3AFzAIoxuu7T5wDXVxTHdoPnANEArukS3wtb/lsfQX/ACmm4+1LoJNk8LiHSiN0Ob9kp9xqD/UaYWn2l1+Jt0ksLmXV4IupJIIgGjG4NKqFKihlPyPMHge+YzhGawkbKVWdKWtB4M52hVqYBglQl8MTZX40r8COXd6cpEUpW7wlnHjwLKUad6taGVTeuPv++J06OGAIIIIuCNQQeIMmJ45oqmmngzKenhx/RtcuPxK/8w/6ikfIyvt8q8l0+JdXr1rOnLo8DsJYFKaa+Fpv76I1t2ZVNvUTFwi9qM41Jw+ltdDNiKALAADkNB6TJLAxbbeLMoPBAEAQBAEA9RSTYQCwoYcL3n/N0A3QBAEAQBANNfEBfGAQHqE7zAMYAgCAasXQFRHQ7nVlPgwI/OYyjrRaM6c3Cakt2ZA6OYB6FHq3sSGaxU6EE3B7uOk1W9OVOGqyRe1o1quvHgi0m8iCAIBhVpKylWAKkWIOoInjSawZlGTi8U8yr2RsypQdlVw2HIuqtfOjE7hzXf8A5cnRSpSpyaT+XwJVxcQrxUmsJ73ua9ffRbyQQyP9Dp9Z1uQdZbLm4kcjz3CY6kdbWwzNnKz1OTxy4EiZGsQBAEAQBAEAQBAAMAsMJVLDXhx5wDfAEAQBAIeJxPBfM/2gESAIAgCARMRj1SrTpEMWqZspAFuyLtc30sNfOAR6+26aXLh1VaopFiBlDEAgnX3bEG/fANlfaiq5p5KhbsWyhSGzhiLHN9h9/wBUwCL/AMR0ur63JVyZc98q6rmyEjtcGsPMQDfiNsKilmp1RZ1S1lvd7ZfisQSQN++AYV9v0kR3YOBTcJUGUZkJta4vqNRqL74BIxe1KdN6VM3LVScgUA7tSSb6C34GAMbtFab00KOzVCwUKF1KjMRqRbQEwDQNuUyKRVXbrSyqAADmS+ZWDEWIsfSAbDtZewAlRncMRTAUMAhysWuQqi+mp14XgGDbaQBDkqe0qNSAyqCHQkEEFtPdbXugGX64phqasGQ1S6rnAHaQ5Sp10N93A3EA8r7ZRASUqaVRR0C6u1rW7W43GvfAPV21SK5hmJ6w0ert2+sXelt2m+97W4wB+uaQWoXzIaZUOjDtAv7lgpIbNfSxN4B6dqAZs1KqpVDUIYJqoNjYhiL917wDX+vE6s1SlUIKa1blV1RuIs3LW2+ASU2gjNTVbsKiF1YWy5Vte5vf4l4cfGAS4AgE7BKQNdx3QCTAEAQDXXeykwCsgCAIAgCAVm1MK5q0KyLm6o1Ay3AJWouW6k6XBA0JEAj1sA7L2qYYPX6x0JWypk6ux5mwBNuZgGWxNnVKDVQxzoFprRNxmKJnIRu8ZrX5WgEP9VVv1d9GyDrLZbZlt+8z3v4QDLHYCs1I00pEL11OoL1AX/eGpUJYk8bAcYAp7Lqim9J6YqZq6uamZc1VMwJz3PvADLpputANWG2PXU0CwDtSqgZswHsaaOibz7x6wnygE/buBqValApcBDULOrKGTOhQFQd9ib+AgFe2yapp4ZGoj2TVOs6uoFzZkZcytcG7Frm55wCXRwlZKqV+rB9kaLUwy5lVahamwJOVjltfUd0A0YjZuIZaQcM5XEPUPtAGWnZlRA1x2rMNx4HWAbqmy2qilTq0rU1SrT0ZSUF06pr8XApg3HEwCPU2ViDRCP7R/pSVGYMFLImXtXuLMQvrAPaOx6ylKgA9nXqOlItc9XVTK4Lne97tqTv3wDLHbGq1WqVrBHvQNNGIP7hi3bIuAWJO69rCAScTRxFQ1GysqGg6CkXQ3qNoG0uMtiePlAIuG2dWTDtSFLU0lDE1A2aooROzc9lMqk29LQCVgNktSxOZf3BSoQlxek9RkLKv2TlvpuN4BdwCTgVBJv5QCdAEAQBAMXQEWMArKi2JHKAYwBAEAQBAEAQBAEAQBAEAQBAEAQBAEAQBAEAQABALSklgBAM4AgCAIAgEPG0fiHnAIkAQDM0zlzcIBhAPVUndAPch5H0gE2hhwBqATAI1TDMOF/CAaYAgHrC2kA8gCAIAgCAIAgCAIAgCAbcMe1oLwCygCAIAgCAIB4RANL4VT3eEA9XCqOF/GAbHQEWgEI4M3tw5wCTh6OXx5wDdAEAQDFkB3gGAR6mEFxbTmIBsrUVNyRrbhAK6AIAgCAIAgCAIAgCAIBOwL3FuUAkwBAEAQBAEAQBAEAQBAEAQBAEAQBAPGa2pgFU7XJMA8gCAIAgCAIAgACAbfozWvb+8A1qpJsN8As6SZRYQDOAIAgCAIAgCAIAgCAIAgCAIAgCAIBHxo7PmIBAgG2jQLeHOAbcRhwq31vAIsAQBAEAl08HoCT6QCTTpBdwgGcA8tAPYAgCAIAgCAIAgCAIAgCAIAgCAIAgCAYutwRAIFLDkmxGnGAWIgGFZLqRAK+pRK7xANcAQD1VubCAWlNbADkIBlAEAQBAEAQBAEAQBAEAQBAEAQBAEAQBAEAQBAEAQBAI2POgHfAIMAQCZgafxekAlwBAEAQBAEAQBAEAQBAEAQBAEAQBAEAQBAEAQBAEAQBAPCIBFqYP6p9YBGqUWG8QCyQaDwgGUAQBAEAQBAEAQBAEAQBAEAQBAEAQBAEAQBAEAQBAEAQBAEAQBAEAQBAEAQBAEAQBAEA//2Q==" alt=""><div><b>Ev. Kita „Unterm Regenbogen“</b><span>Meisenpfad 111<br>32130 Enger</span></div></div>
+    <div class="fcol"><h3>Kontakt</h3>
+      <p>Leitungstandem<br><b>Björna Ladage und Justine Lowack</b></p>
+      <p>Telefon: <a href="tel:+4952258731423">05225 8731423</a><br>E-Mail: <a href="mailto:hf-kiga-unterm-regenbogen@kirchenkreis-herford.de">hf-kiga-unterm-regenbogen@kirchenkreis-herford.de</a></p>
+      <p>Geöffnet: Montag bis Freitag, 7 bis 16 Uhr</p></div>
+    <div class="fcol"><details><summary>Impressum</summary>
+      <p><b>Träger der Ev. Kita „Unterm Regenbogen“</b><br>Ev. Kirchenkreis Herford<br>Körperschaft des öffentlichen Rechts<br>Hansastraße 60, 32049 Herford</p>
+      <p>Vertreten durch den Superintendenten Dr. Olaf Reinmuth<br>Telefon: 05221 988-3<br>E-Mail: info@kirchenkreis-herford.de</p>
+      <p class="hint">Angaben laut Impressum von <a href="https://www.kitas-herford.de/impressum/">kitas-herford.de</a>. Mehr über die Kita: <a href="https://www.kitas-herford.de/kitas/ev-kita-unterm-regenbogen/">Kita-Seite</a></p>
+    </details><p class="ver">Kita-Bücherei · Version <span id="ver"></span></p></div>
+  </div>
+</footer>
+<datalist id="groups"></datalist>
+<template id="guide"><p class="intro">Mit der Kita-Bücherei wisst ihr jederzeit, welches Buch im Regal steht und welches Kind gerade welches Buch zu Hause hat. So geht's:</p>
+<ol class="steps">
+<li style="--c:#2F7DF6"><h3>Bücher eintragen</h3><p>Jedes Buch wird einmal eingetragen, danach erkennt die App es beim Scannen wieder.</p><ul>
+<li>Tippe oben auf <b>„Buch scannen“</b> und halte den Strichcode auf der Rückseite in den gelben Rahmen. Die App erkennt ihn von selbst.</li>
+<li>Bei einem neuen Buch sucht die App den <b>Titel und die Autor:in automatisch</b> im Internet. Kurz prüfen, Kategorie und Alter wählen, <b>„Speichern“</b>.</li>
+<li><b>Ohne Barcode:</b> Tippe auf „Buch ohne Barcode“, trag den Titel ein und mach auf Wunsch ein Foto vom Cover.</li></ul>
+<p class="hint">Habt ihr ein Buch mehrmals? Trag jedes Exemplar einzeln ein und schreib eine Inventar-Nummer (z. B. 042) innen ins Buch und in die App.</p></li>
+<li style="--c:#F0436A"><h3>Kinder eintragen</h3><p>Im Reiter <b>„Kinder“</b> trägst du Name und Gruppe ein – oder du legst ein Kind direkt beim Ausleihen an.</p><p class="hint">Vorname und Anfangsbuchstabe reichen, z. B. „Mia S.“</p></li>
+<li style="--c:#23964A"><h3>Ein Buch ausleihen</h3><ul>
+<li>Das Kind bringt dir das Buch. <b>„Buch scannen“</b> antippen und den Barcode in die Kamera halten.</li>
+<li>Die App zeigt „Im Regal“. Auf <b>„Ausleihen“</b> tippen.</li>
+<li>Kind antippen (oder oben suchen) – das Rückgabedatum ist schon eingestellt.</li>
+<li><b>„Ausleihen“</b> – fertig.</li></ul></li>
+<li style="--c:#F59E0B"><h3>Ein Buch zurücknehmen</h3><ul>
+<li>Buch scannen – die App zeigt, bei welchem Kind es war. <b>„Zurückgegeben“</b> antippen.</li>
+<li>Oder im Reiter <b>„Ausgeliehen“</b> beim Buch auf <b>„Zurück“</b>.</li>
+<li>Vertippt? Unten erscheint kurz <b>„Rückgängig“</b>.</li></ul></li>
+<li style="--c:#8B5CF6"><h3>Den Überblick behalten</h3><ul>
+<li>Oben siehst du, wie viele Bücher im Regal, ausgeliehen und <b>überfällig</b> sind.</li>
+<li><b>„Ausgeliehen“</b> zeigt alle verliehenen Bücher, Überfällige rot ganz oben.</li>
+<li>Tippst du auf ein Buch oder ein Kind, siehst du den ganzen Verlauf.</li></ul></li>
+<li style="--c:#0FA3A3"><h3>Kategorien und Leihdauer</h3><p>Unter <b>„Einstellungen & Team“</b> kannst du Kategorien umbenennen, löschen oder neue anlegen (z. B. „Dinosaurier“) und die Leihdauer ändern.</p></li>
+<li style="--c:#E25DB0"><h3>Kolleg:innen und Eltern</h3><ul>
+<li><b>Neue Kolleg:in:</b> Die Leitung trägt die E-Mail-Adresse unter „Einstellungen & Team“ ein. Die Kolleg:in öffnet die App, tippt oben auf <b>„Team-Anmeldung“ → „Konto anlegen“</b>, wählt ein Passwort und bestätigt den Link in der E-Mail. Fertig.</li>
+<li><b>Eltern:</b> bekommen einfach den Link zur App. Sie brauchen keine Anmeldung und sehen nur die Bücherliste – keine Namen, keinen Verlauf.</li>
+<li>Verlässt jemand das Team, entfernt die Leitung den Zugang in der Liste.</li></ul></li>
+<li style="--c:#FF7A3D"><h3>Als App aufs Handy</h3><ul>
+<li><b>iPhone:</b> Link in Safari öffnen, unten auf das Teilen-Symbol, dann <b>„Zum Home-Bildschirm“</b>.</li>
+<li><b>Android:</b> Link in Chrome öffnen, oben auf die drei Punkte, dann <b>„Zum Startbildschirm hinzufügen“</b> bzw. „App installieren“.</li></ul></li>
+</ol>
+<div class="tipbox"><h3>Wenn die Kamera nicht will</h3><p>Beim ersten Scannen fragt das Handy, ob die App die Kamera benutzen darf – bitte „Erlauben“. Klappt es trotzdem nicht: „Lieber ein Foto machen“ oder die Nummer unter dem Barcode eintippen.</p></div>
+<div class="tipbox"><h3>Datenschutz und Sicherung</h3><p>Verlässt ein Kind die Kita, lösche es im Reiter „Kinder“ mitsamt Verlauf. Unter „Einstellungen & Team“ kannst du ab und zu eine Sicherung speichern.</p></div>
+</template>
+<div id="modal" hidden><div class="sheet" id="mbody" role="dialog" aria-modal="true"></div></div>
+<div id="ask" hidden><div class="sheet"><p></p><div class="mfoot"><button class="btn sm light" data-act="askno">Abbrechen</button><button class="btn sm primary" data-act="askok" data-ok>OK</button></div></div></div>
+<div id="busy" hidden><div><span class="spin"></span><span id="busyT">Moment …</span></div></div>
+<div id="toast" hidden><span id="toastT"></span><button id="toastU" data-act="undo" hidden>Rückgängig</button></div>
+<script>
+{
+const VERSION='2.0';
+const CFG=(window.KITA_CONFIG&&window.KITA_CONFIG.firebase)||{};
+const FB='https://www.gstatic.com/firebasejs/10.14.1/';
+const CATS=['Bilderbuch','Pappbilderbuch für die Kleinsten','Wimmelbuch','Fühl- & Klappenbuch','Tiere & Natur','Fahrzeuge & Technik','Mein Körper & Gesundheit','Berufe & die weite Welt','Märchen & Sagen','Vorlesegeschichten','Gute-Nacht-Geschichten','Reime, Lieder & Fingerspiele','Gefühle & Freundschaft','Alltag & Kita','Jahreszeiten & Feste','Zahlen, Farben & Formen','Erstes Lesen & ABC','Vielfalt & mehrsprachig','Rätsel & Mitmachen'];
+const PAL=['#F0436A','#2F7DF6','#F59E0B','#23964A','#8B5CF6','#FF7A3D','#0FA3A3','#E25DB0','#5B6CFF','#7FA82A','#0E8FD6','#C2410C'];
+const AGES=['','ab 1','ab 2','ab 3','ab 4','ab 5','ab 6'];
+const TABS=[['ausgeliehen','Ausgeliehen'],['buecher','Bücher'],['kinder','Kinder'],['mehr','Einstellungen & Team'],['anleitung','So geht’s']];
+const I={x:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+ pen:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16v4z"/></svg>',
+ bin:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>'};
+const S={books:{},kids:{},loans:{},staff:{},settings:{days:14,cats:CATS.slice()},loaded:false,priv:false,ro:true,user:null,role:null,synced:false,tab:'buecher',q:'',cat:'',st:'all',kq:''};
+let F=null,fs=null,auth=null,unsub=[],mRefresh=null,askRes=null,undoFn=null,toastT=0,lendSel=null,coverData='',scanStop=null,scanCb=null;
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid=p=>p+Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const iso=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+const today=()=>iso(new Date());
+const addDays=(s,n)=>{const d=new Date(s+'T12:00');d.setDate(d.getDate()+n);return iso(d)};
+const diff=(a,b)=>Math.round((new Date(b+'T12:00')-new Date(a+'T12:00'))/864e5);
+const fmt=s=>s?new Date(s+'T12:00').toLocaleDateString('de-DE',{day:'numeric',month:'short'}):'';
+const hash=s=>{let h=5381;for(const c of String(s))h=(h*33+c.charCodeAt(0))>>>0;return h};
+const tage=n=>n===1?'1 Tag':n+' Tagen';
+function catColor(c){const i=S.settings.cats.indexOf(c);return i<0?'#9A93B5':PAL[i%PAL.length]}
+function norm(raw){let s=String(raw||'').toUpperCase().replace(/[^0-9X]/g,'');if(s.length===10){const b='978'+s.slice(0,9);let t=0;for(let i=0;i<12;i++)t+=(+b[i])*(i%2?3:1);s=b+((10-t%10)%10)}return s}
+function activeMap(){const m={};for(const [id,l] of Object.entries(S.loans))if(!l.back&&S.books[l.book])m[l.book]=[id,l];return m}
+function outMap(){const m={};if(!S.ro&&S.priv){for(const [k,[,l]] of Object.entries(activeMap()))m[k]={due:l.due,kid:l.kid};return m}for(const [id,b] of Object.entries(S.books))if(b.out)m[id]={due:b.due||''};return m}
+function kidName(id){const k=S.kids[id];return k?k.name:'(gelöschtes Kind)'}
+function since(d){const n=diff(d,today());return n<=0?'heute':n===1?'gestern':'seit '+tage(n)}
+function dueInfo(due){const n=diff(today(),due);if(n<0)return['late',(-n===1?'1 Tag':-n+' Tage')+' überfällig'];if(n===0)return['due','heute zurück'];if(n<=2)return['due','noch '+(n===1?'1 Tag':n+' Tage')];return['ok','bis '+fmt(due)]}
+const cover=b=>typeof b.cover==='string'&&(b.cover.startsWith('data:image/')||b.cover.startsWith('https://'))?b.cover:'';
+const IMG='referrerpolicy="no-referrer" loading="lazy" alt=""';
+function thumb(b,big){const c=cover(b);return c?`<img class="th${big?' big':''}" src="${esc(c)}" ${IMG}>`:`<span class="th sp${big?' big':''}" style="--c:${catColor(b.cat)}">${esc((b.title||'?').trim().charAt(0).toUpperCase())}</span>`}
+function av(id,k){return `<span class="av" style="--c:${PAL[hash(id)%PAL.length]}">${esc((k.name||'?').trim().charAt(0).toUpperCase())}</span>`}
+
+/* ---------- Speicher (Firebase) ---------- */
+function fail(e){const c=String(e&&e.code||'');if(c.includes('permission'))toast('Keine Berechtigung – bist du als Team angemeldet?');else if(c.includes('resource-exhausted'))toast('Das kostenlose Tageskontingent ist aufgebraucht – morgen geht es weiter');else toast('Konnte nicht speichern – bitte nochmal versuchen')}
+function raw(coll,id,obj){const r=F.doc(fs,coll,id);return obj===null?F.deleteDoc(r):F.setDoc(r,obj)}
+async function put(coll,id,obj,quiet){if(S.ro){toast('Bitte zuerst als Team anmelden');return false}
+ if(obj===null)delete S[coll][id];else S[coll][id]=obj;if(!quiet)render();
+ raw(coll,id,obj).catch(fail);return true}
+async function putSettings(){if(S.ro)return;render();raw('settings','main',{days:S.settings.days,cats:S.settings.cats}).catch(fail)}
+function setMode(){document.body.classList.toggle('parent',S.ro);
+ $('#mode').textContent=!F?'Lädt …':S.ro?'Ansicht für Eltern':S.role==='leitung'?'Angemeldet: Leitung':'Angemeldet: Team';
+ $('#acct').textContent=S.user?'Konto':'Team-Anmeldung';
+ const u=S.user;let n='';
+ if(u&&!u.emailVerified)n=`Bitte bestätige noch deine E-Mail-Adresse. Wir haben einen Link an <b>${esc(u.email)}</b> geschickt.<div class="mfoot"><button class="btn sm primary" data-act="verified">Ich habe bestätigt</button><button class="btn sm light" data-act="resend">E-Mail nochmal senden</button></div>`;
+ else if(u&&!S.role)n=`Dein Konto <b>${esc(u.email)}</b> ist noch nicht freigeschaltet. Bitte die Kita-Leitung, deine E-Mail-Adresse unter „Einstellungen & Team“ einzutragen.<div class="mfoot"><button class="btn sm primary" data-act="recheck">Nochmal prüfen</button><button class="btn sm light" data-act="logout">Abmelden</button></div>`;
+ $('#notice').innerHTML=n;$('#notice').hidden=!n}
+
+async function init(){
+ if(!CFG.apiKey||!CFG.projectId){$('#mode').textContent='Nicht eingerichtet';$('#view').innerHTML=`<div class="empty"><b>Die App ist noch nicht eingerichtet</b>Öffne die Datei <b>ANLEITUNG.html</b> und trage die Firebase-Daten in <b>config.js</b> ein.</div>`;return}
+ try{const [a,b,c]=await Promise.all([import(FB+'firebase-app.js'),import(FB+'firebase-auth.js'),import(FB+'firebase-firestore.js')]);F=Object.assign({},a,b,c);
+  const app=F.initializeApp(CFG);
+  try{fs=F.initializeFirestore(app,{localCache:F.persistentLocalCache({tabManager:F.persistentMultipleTabManager()})})}catch(e){fs=F.getFirestore(app)}
+  auth=F.getAuth(app);auth.languageCode='de'}
+ catch(e){$('#mode').textContent='Offline';$('#view').innerHTML=`<div class="empty"><b>Die App konnte nicht starten</b>Bitte die Internetverbindung prüfen und die Seite neu laden.</div>`;return}
+ setMode();let pend=2;const done=()=>{if(--pend===0){S.loaded=true;render()}};
+ let f1=true;F.onSnapshot(F.collection(fs,'books'),snap=>{const m={};snap.forEach(d=>{m[d.id]=d.data()});S.books=m;if(f1){f1=false;done()}render()},()=>{if(f1){f1=false;done()}toast('Bücher konnten nicht geladen werden')});
+ let f2=true;F.onSnapshot(F.doc(fs,'settings','main'),d=>{if(d.exists()){const x=d.data();S.settings={days:+x.days||14,cats:Array.isArray(x.cats)?x.cats.map(String):CATS.slice()}}if(f2){f2=false;done()}render()},()=>{if(f2){f2=false;done()}});
+ F.onAuthStateChanged(auth,u=>{S.user=u;checkStaff()})}
+async function checkStaff(){stop();S.role=null;S.ro=true;S.kids={};S.loans={};S.staff={};S.priv=false;const u=S.user;
+ if(u&&u.emailVerified){try{const d=await F.getDoc(F.doc(fs,'staff',u.email.toLowerCase()));if(d.exists())S.role=d.data().role==='leitung'?'leitung':'team'}catch(e){}}
+ if(S.role){S.ro=false;start()}setMode();route();render()}
+function start(){let pend=2;const done=()=>{if(--pend===0){S.priv=true;render();if(!S.synced){S.synced=true;reconcile()}}};
+ for(const c of ['kids','loans']){let first=true;unsub.push(F.onSnapshot(F.collection(fs,c),snap=>{const m={};snap.forEach(d=>{m[d.id]=d.data()});S[c]=m;if(first){first=false;done()}render()},()=>{if(first){first=false;done()}}))}
+ unsub.push(F.onSnapshot(F.collection(fs,'staff'),snap=>{const m={};snap.forEach(d=>{m[d.id]=d.data()});S.staff=m;render()},()=>{}))}
+function stop(){unsub.forEach(f=>{try{f()}catch(e){}});unsub=[];S.synced=false}
+
+/* ---------- Kopfbereich ---------- */
+const shelf=$('#shelf');
+function drawShelf(){const W=shelf.clientWidth,H=shelf.clientHeight;if(!W||!H)return;const act=outMap();
+ const list=Object.entries(S.books).sort((a,b)=>(S.settings.cats.indexOf(a[1].cat)-S.settings.cats.indexOf(b[1].cat))||String(a[1].title).localeCompare(String(b[1].title)));
+ const items=list.length?list:Array.from({length:Math.floor(W/16)},(_,i)=>['ph'+i,null]);
+ const base=H-14;let x=6,out='',shown=0;
+ for(const [id,b] of items){const h=hash(id),w=12+h%7;if(list.length&&x+w>W-44&&shown<items.length-1)break;if(x+w>W-4)break;
+  const bh=Math.round((H-24)*(.62+((h>>4)%38)/100)),y=base-bh;
+  if(!b)out+=`<rect x="${x}" y="${y}" width="${w}" height="${bh}" rx="3" fill="currentColor" opacity=".1"/>`;
+  else if(act[id])out+=`<rect x="${x+1}" y="${y+1}" width="${w-2}" height="${bh-2}" rx="3" fill="none" stroke="currentColor" stroke-opacity=".5" stroke-width="1.6" stroke-dasharray="3 3"/>`;
+  else out+=`<rect x="${x}" y="${y}" width="${w}" height="${bh}" rx="3" fill="${catColor(b.cat)}"/><rect x="${x+2}" y="${y+9}" width="${w-4}" height="3" rx="1.5" fill="#fff" opacity=".55"/><rect x="${x+2}" y="${y+bh-16}" width="${w-4}" height="3" rx="1.5" fill="#fff" opacity=".4"/>`;
+  x+=w+3;shown++}
+ const rest=list.length-shown;if(list.length&&rest>0)out+=`<text x="${x+4}" y="${base-8}" font-family="Baloo 2,sans-serif" font-weight="800" font-size="16" fill="currentColor">+${rest}</text>`;
+ if(!list.length)out+=`<text x="${W/2}" y="${base-(H-24)/2}" text-anchor="middle" font-family="Baloo 2,sans-serif" font-weight="800" font-size="20" fill="currentColor">Das Regal wartet auf Bücher</text>`;
+ shelf.innerHTML=`<rect x="0" y="${base}" width="${W}" height="9" rx="4" fill="#C98B4F"/><rect x="4" y="${base+9}" width="${W-8}" height="5" rx="2" fill="#9C6533"/>`+out}
+const ro=new ResizeObserver(drawShelf);ro.observe(shelf);
+function drawStats(){const act=outMap(),t=today();const total=Object.keys(S.books).length,out=Object.keys(act).length,late=Object.values(act).filter(x=>x.due&&x.due<t).length;
+ $('#sIn').textContent=total-out;$('#sOut').textContent=out;$('#sLate').textContent=late;$('#sLateBox').classList.toggle('late',late>0);
+ $('#tabs').innerHTML=TABS.map(([k,n])=>`<a href="#${k}" class="${S.tab===k?'on':''}">${n}${k==='ausgeliehen'&&late?`<i>${late}</i>`:''}</a>`).join('');
+ const groups=[...new Set(Object.values(S.kids).map(k=>k.group).filter(Boolean))].sort();$('#groups').innerHTML=groups.map(g=>`<option value="${esc(g)}">`).join('')}
+
+/* ---------- Reiter ---------- */
+function loading(){return `<div class="empty"><span class="spin" style="display:inline-block"></span><p>Bücherei wird geladen …</p></div>`}
+const V={
+ ausgeliehen:{skel:()=>`<div id="lv"></div>`,fill(){const el=$('#lv');if(!S.loaded||!S.priv){el.innerHTML=loading();return}
+  const rows=Object.entries(S.loans).filter(([,l])=>!l.back&&S.books[l.book]).sort((a,b)=>String(a[1].due).localeCompare(String(b[1].due)));
+  el.innerHTML=rows.length?`<div class="list">${rows.map(([id,l])=>{const b=S.books[l.book],[c,t]=dueInfo(l.due);return `<div class="row" data-act="book" data-id="${l.book}">${thumb(b)}<div><span class="rt">${esc(b.title)}</span><span class="rs">bei <b>${esc(kidName(l.kid))}</b> · ${since(l.out)}</span><span class="badge ${c}">${t}</span></div><button class="btn sm ok" data-act="return" data-id="${id}">Zurück</button></div>`}).join('')}</div>`
+  :Object.keys(S.books).length?`<div class="empty"><b>Alle Bücher sind im Regal</b>Kommt ein Kind mit einem Buch, tippe oben auf „Buch scannen“.</div>`
+  :`<div class="empty"><b>Willkommen in eurer Bücherei!</b>Noch sind keine Bücher eingetragen. Wie alles funktioniert, steht in der Anleitung.<p><a class="btn primary" href="#anleitung">Anleitung lesen</a></p></div>`}},
+ buecher:{skel:()=>`<p class="intro parentonly">Hier seht ihr, welche Bücher gerade in der Kita im Regal stehen und welche ausgeliehen sind. Tippt auf ein Buch für mehr Infos.</p><div class="tool"><input id="q" type="search" placeholder="Titel, Autor:in oder ISBN suchen" value="${esc(S.q)}"><div class="seg" id="st"></div></div><div class="scroll" id="cats"></div><div id="bl"></div>`,
+  fill(){if(!S.loaded){$('#bl').innerHTML=loading();return}const act=outMap(),all=Object.entries(S.books);
+   $('#st').innerHTML=[['all','Alle'],['in','Im Regal'],['out','Ausgeliehen']].map(([k,n])=>`<button class="${S.st===k?'on':''}" data-act="st" data-id="${k}">${n}</button>`).join('');
+   const cnt={};all.forEach(([,b])=>cnt[b.cat]=(cnt[b.cat]||0)+1);
+   $('#cats').innerHTML=`<button class="chipb ${S.cat===''?'on':''}" data-act="cat" data-id="">Alle (${all.length})</button>`+S.settings.cats.filter(c=>cnt[c]).map(c=>`<button class="chipb ${S.cat===c?'on':''}" data-act="cat" data-id="${esc(c)}"><span class="dot" style="--c:${catColor(c)}"></span>${esc(c)} (${cnt[c]})</button>`).join('');
+   const q=S.q.trim().toLowerCase(),qn=norm(S.q);
+   const rows=all.filter(([id,b])=>(!S.cat||b.cat===S.cat)&&(S.st==='all'||(S.st==='out')===!!act[id])&&(!q||String(b.title).toLowerCase().includes(q)||String(b.author||'').toLowerCase().includes(q)||String(b.inv||'').toLowerCase()===q||(qn.length>3&&norm(b.isbn).includes(qn)))).sort((a,b)=>String(a[1].title).localeCompare(String(b[1].title)));
+   $('#bl').innerHTML=!all.length?`<div class="empty"><b>Noch keine Bücher</b>${S.ro?'Hier erscheinen bald die Bücher der Kita.':'Scanne das erste Buch oder lege es ohne Barcode an.'}</div>`:!rows.length?`<div class="empty"><b>Nichts gefunden</b>Versuch es mit einem anderen Suchwort.</div>`
+   :`<div class="grid">${rows.map(([id,b])=>{const a=act[id],c=cover(b);return `<div class="card" data-act="book" data-id="${id}">${c?`<img class="cv" src="${esc(c)}" ${IMG}>`:`<span class="cv sp" style="--c:${catColor(b.cat)}">${esc(String(b.title||'?').charAt(0).toUpperCase())}</span>`}<b>${esc(b.title)}</b><small>${esc(b.author||b.cat||'')}</small>${a?(S.ro||!a.kid?`<span class="badge out">ausgeliehen</span>`:`<span class="badge ${a.due<today()?'late':'out'}">bei ${esc(kidName(a.kid))}</span>`):`<span class="badge ok">im Regal</span>`}</div>`}).join('')}</div>`}},
+ kinder:{skel:()=>`<form id="kf" class="addrow"><input name="name" placeholder="Vorname (+ Anfangsbuchstabe)" required autocomplete="off"><input name="group" list="groups" placeholder="Gruppe, z. B. Bärengruppe" autocomplete="off"><button class="btn sm primary">Kind hinzufügen</button></form><div class="tool"><input id="kq" type="search" placeholder="Kind suchen" value="${esc(S.kq)}"></div><div id="kl"></div><p class="hint">Datenschutz-Tipp: Vorname und Anfangsbuchstabe reichen völlig. Verlässt ein Kind die Kita, lösche es hier mitsamt Verlauf.</p>`,
+  fill(){const el=$('#kl');if(!S.priv){el.innerHTML=loading();return}const t=today(),cur={};Object.values(activeMap()).forEach(([,l])=>{(cur[l.kid]=cur[l.kid]||[]).push(l)});
+   const q=S.kq.trim().toLowerCase(),rows=Object.entries(S.kids).filter(([,k])=>!q||String(k.name).toLowerCase().includes(q)||String(k.group||'').toLowerCase().includes(q)).sort((a,b)=>String(a[1].name).localeCompare(String(b[1].name)));
+   el.innerHTML=!Object.keys(S.kids).length?`<div class="empty"><b>Noch keine Kinder eingetragen</b>Trag die Kinder oben ein, oder leg sie direkt beim Ausleihen an.</div>`:`<div class="list">${rows.map(([id,k])=>{const c=cur[id]||[],late=c.some(l=>l.due<t);return `<div class="row" data-act="kid" data-id="${id}">${av(id,k)}<div><span class="rt">${esc(k.name)}</span><span class="rs">${esc(k.group||'ohne Gruppe')}</span></div>${c.length?`<span class="badge ${late?'late':'out'}">${c.length} ${c.length===1?'Buch':'Bücher'}</span>`:''}</div>`}).join('')}</div>`}},
+ mehr:{skel:()=>`<div class="box"><h2>Team & Zugänge</h2><p class="hint" style="margin-top:0">Wer hier eingetragen ist, legt sich in der App mit genau dieser E-Mail-Adresse ein Konto an („Team-Anmeldung“ → „Konto anlegen“) und sieht dann alles, auch die Namen der Kinder. Eltern brauchen keinen Zugang.</p><form id="sf" class="addrow leitungonly" style="margin-top:12px"><input name="email" type="email" placeholder="E-Mail der Kollegin / des Kollegen" required autocomplete="off"><select name="role" style="flex:0 1 170px"><option value="team">Team</option><option value="leitung">Leitung</option></select><button class="btn sm primary">Freischalten</button></form><div id="tl"></div></div>
+  <div class="box"><h2>Kategorien</h2><form id="cf" class="addrow"><input name="c" placeholder="Neue Kategorie, z. B. Dinosaurier" required><button class="btn sm primary">Hinzufügen</button></form><div id="cl"></div></div>
+  <div class="box"><h2>Ausleihe</h2><div class="field"><label for="days">Standard-Leihdauer in Tagen</label><input id="days" type="number" min="1" max="90" inputmode="numeric"></div></div>
+  <div class="box"><h2>Datensicherung</h2><div class="mfoot" style="margin-top:0"><button class="btn sm light" data-act="exjson">Sicherung speichern</button><button class="btn sm light" data-act="excsv">Bücherliste (CSV)</button><label class="btn sm light leitungonly" for="impIn">Sicherung einspielen</label><input id="impIn" class="vh" type="file" accept=".json,application/json"></div><p class="hint">Die Daten liegen in eurer eigenen Firebase-Datenbank. Eine Sicherung ab und zu schadet trotzdem nicht.</p></div>`,
+  fill(){const cnt={};Object.values(S.books).forEach(b=>cnt[b.cat]=(cnt[b.cat]||0)+1);const L=S.role==='leitung',me=S.user?S.user.email.toLowerCase():'';
+   document.querySelectorAll('.leitungonly').forEach(e=>e.hidden=!L);
+   const st=Object.entries(S.staff).sort((a,b)=>(a[1].role===b[1].role?a[0].localeCompare(b[0]):a[1].role==='leitung'?-1:1));
+   $('#tl').innerHTML=st.map(([em,x])=>`<div class="catrow"><span class="n">${esc(em)}${em===me?' <small>(du)</small>':''}</span><span class="badge ${x.role==='leitung'?'due':'out'}">${x.role==='leitung'?'Leitung':'Team'}</span>${L&&em!==me?`<button class="ib" data-act="delstaff" data-id="${esc(em)}" aria-label="Zugang entfernen">${I.bin}</button>`:''}</div>`).join('')+(L?'':'<p class="hint">Neue Kolleg:innen freischalten kann nur die Leitung.</p>');
+   $('#cl').innerHTML=S.settings.cats.map((c,i)=>`<div class="catrow"><span class="dot" style="--c:${catColor(c)}"></span><span class="n">${esc(c)}</span><small>${cnt[c]||0} ${cnt[c]===1?'Buch':'Bücher'}</small><button class="ib" data-act="rencat" data-id="${i}" aria-label="Umbenennen">${I.pen}</button><button class="ib" data-act="delcat" data-id="${i}" aria-label="Löschen">${I.bin}</button></div>`).join('')+(cnt['']?`<div class="catrow"><span class="dot" style="--c:#9A93B5"></span><span class="n">Ohne Kategorie</span><small>${cnt['']} ${cnt['']===1?'Buch':'Bücher'}</small></div>`:'');
+   const d=$('#days');if(document.activeElement!==d)d.value=S.settings.days||14}},
+ anleitung:{fill(){},skel:()=>$('#guide').innerHTML}};
+function buildTab(){$('#view').innerHTML=V[S.tab].skel();V[S.tab].fill()}
+function render(){drawStats();drawShelf();if($('#view').firstChild&&F)V[S.tab].fill();if(mRefresh)mRefresh()}
+function route(){if(!F)return;const h=location.hash.slice(1);S.tab=S.ro?'buecher':V[h]?h:'ausgeliehen';drawStats();buildTab()}
+addEventListener('hashchange',route);
+
+/* ---------- Dialoge ---------- */
+const M=$('#modal'),MB=$('#mbody');
+function openModal(html,refresh){stopScan();MB.innerHTML=html;mRefresh=refresh||null;if(refresh)refresh();M.hidden=false;document.body.classList.add('lock');MB.scrollTop=0}
+function closeModal(){stopScan();M.hidden=true;mRefresh=null;MB.innerHTML='';document.body.classList.remove('lock')}
+M.addEventListener('click',e=>{if(e.target===M)closeModal()});
+addEventListener('keydown',e=>{if(e.key==='Escape'){if(!$('#ask').hidden)answer(false);else if(!M.hidden)closeModal()}});
+function ask(text,ok){return new Promise(r=>{askRes=r;$('#ask p').textContent=text;$('#ask [data-ok]').textContent=ok||'OK';$('#ask').hidden=false})}
+function answer(v){$('#ask').hidden=true;if(askRes)askRes(v);askRes=null}
+function toast(t,undo){$('#toastT').textContent=t;undoFn=undo||null;$('#toastU').hidden=!undo;$('#toast').hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>{$('#toast').hidden=true;undoFn=null},undo?6000:3500)}
+function busy(t){$('#busyT').textContent=t||'';$('#busy').hidden=!t}
+const X=`<button class="x" data-act="close" aria-label="Schließen">${I.x}</button>`;
+
+function openBook(id){openModal('',()=>{const b=S.books[id];if(!b){closeModal();return}
+ if(S.ro){MB.innerHTML=`${X}<div class="bhead">${thumb(b,true)}<div><h2>${esc(b.title)}</h2>${b.author?`<p style="margin:4px 0 0">${esc(b.author)}</p>`:''}<div class="meta">${b.cat?`<span>${esc(b.cat)}</span>`:''}${b.age?`<span>${esc(b.age)} Jahren</span>`:''}</div></div></div>${b.out?`<div class="status out"><div><b>Gerade ausgeliehen</b><span>${b.due&&b.due>=today()?'Voraussichtlich ab '+fmt(b.due)+' wieder da':'Kommt bald zurück'}</span></div></div>`:`<div class="status in"><div><b>In der Kita</b><span>Steht im Regal und kann ausgeliehen werden</span></div></div>`}`;return}
+ const a=activeMap()[id];
+ const hist=Object.values(S.loans).filter(l=>l.book===id).sort((x,y)=>String(y.out).localeCompare(String(x.out)));
+ let st;if(a){const[c,t]=dueInfo(a[1].due);st=`<div class="status ${c==='late'?'late':'out'}"><div><b>Bei ${esc(kidName(a[1].kid))}</b><span>${since(a[1].out).replace(/^s/,'S')} · ${t}</span></div><button class="btn big ok" data-act="return" data-id="${a[0]}">Zurückgegeben</button></div>`}
+ else st=`<div class="status in"><div><b>Im Regal</b><span>Bereit zum Ausleihen</span></div><button class="btn big primary" data-act="lend" data-id="${id}">Ausleihen</button></div>`;
+ MB.innerHTML=`${X}<div class="bhead">${thumb(b,true)}<div><h2>${esc(b.title)}</h2>${b.author?`<p style="margin:4px 0 0">${esc(b.author)}</p>`:''}<div class="meta">${b.cat?`<span><i class="dot" style="--c:${catColor(b.cat)};display:inline-block;width:9px;height:9px;vertical-align:-1px"></i> ${esc(b.cat)}</span>`:''}${b.age?`<span>${esc(b.age)} Jahren</span>`:''}${b.inv?`<span>Nr. ${esc(b.inv)}</span>`:''}${b.isbn?`<span>ISBN ${esc(b.isbn)}</span>`:''}</div></div></div>${st}${b.note?`<div class="note">${esc(b.note)}</div>`:''}
+ <h3>Verlauf</h3>${hist.length?`<ul class="hist">${hist.slice(0,15).map(l=>`<li><span>${esc(kidName(l.kid))}</span><span>${fmt(l.out)} – ${l.back?fmt(l.back):'noch ausgeliehen'}</span></li>`).join('')}</ul>${hist.length>15?`<p class="hint">und ${hist.length-15} weitere</p>`:''}<p class="hint">Insgesamt ${hist.length}× ausgeliehen</p>`:'<p class="hint">Noch nie ausgeliehen.</p>'}
+ <div class="mfoot"><button class="btn sm light" data-act="editbook" data-id="${id}">${I.pen} Bearbeiten</button><button class="btn sm danger" data-act="delbook" data-id="${id}">Löschen</button></div>`})}
+
+function openKid(id){openModal('',()=>{const k=S.kids[id];if(!k){closeModal();return}const all=Object.entries(S.loans).filter(([,l])=>l.kid===id&&S.books[l.book]);
+ const cur=all.filter(([,l])=>!l.back),past=all.filter(([,l])=>l.back).sort((x,y)=>String(y[1].out).localeCompare(String(x[1].out)));
+ MB.innerHTML=`${X}<div class="bhead">${av(id,k)}<div><h2>${esc(k.name)}</h2><p class="hint" style="margin:2px 0 0">${esc(k.group||'ohne Gruppe')}</p></div></div>
+ <h3>Hat gerade</h3>${cur.length?`<div class="list">${cur.map(([lid,l])=>{const b=S.books[l.book],[c,t]=dueInfo(l.due);return `<div class="row" data-act="book" data-id="${l.book}">${thumb(b)}<div><span class="rt">${esc(b.title)}</span><span class="badge ${c}">${t}</span></div><button class="btn sm ok" data-act="return" data-id="${lid}">Zurück</button></div>`}).join('')}</div>`:'<p class="hint">Gerade kein Buch ausgeliehen.</p>'}
+ <h3>Schon gelesen</h3>${past.length?`<ul class="hist">${past.slice(0,20).map(([,l])=>`<li><span>${esc(S.books[l.book].title)}</span><span>${fmt(l.out)}</span></li>`).join('')}</ul>`:'<p class="hint">Noch nichts zurückgegeben.</p>'}
+ <div class="mfoot"><button class="btn sm light" data-act="editkid" data-id="${id}">${I.pen} Bearbeiten</button><button class="btn sm danger" data-act="delkid" data-id="${id}">Kind löschen</button></div>`})}
+
+function openKidForm(id){const k=S.kids[id];openModal(`${X}<h2>Kind bearbeiten</h2><form id="kef" data-id="${id}"><div class="field"><label for="ken">Name</label><input id="ken" name="name" required value="${esc(k.name)}"></div><div class="field"><label for="keg">Gruppe</label><input id="keg" name="group" list="groups" value="${esc(k.group||'')}"></div><div class="mfoot"><button class="btn primary wide">Speichern</button></div></form>`)}
+
+function openLend(bookId){const b=S.books[bookId];lendSel=null;
+ openModal(`${X}<h2>Ausleihen</h2><p class="hint" style="margin:2px 0 0">${esc(b.title)}</p>
+ <div class="field"><label for="lq">An welches Kind?</label><input id="lq" type="search" placeholder="Name suchen" autocomplete="off"></div><div class="kpick" id="kpick"></div>
+ <div class="newkid"><input id="nk" placeholder="Neues Kind: Name" autocomplete="off"><input id="nkg" list="groups" placeholder="Gruppe" autocomplete="off"><button class="btn sm light" data-act="quickkid">Anlegen</button></div>
+ <div class="field"><label for="due">Zurück bis</label><input id="due" type="date" value="${addDays(today(),+S.settings.days||14)}"></div>
+ <div class="mfoot"><button class="btn big primary wide" id="lendBtn" data-act="dolend" data-id="${bookId}" disabled>Ausleihen</button></div>`);fillPick()}
+function fillPick(){const el=$('#kpick');if(!el)return;const q=($('#lq').value||'').trim().toLowerCase();
+ const rows=Object.entries(S.kids).filter(([,k])=>!q||String(k.name).toLowerCase().includes(q)||String(k.group||'').toLowerCase().includes(q)).sort((a,b)=>String(a[1].name).localeCompare(String(b[1].name)));
+ el.innerHTML=rows.length?rows.map(([id,k])=>`<button type="button" class="${lendSel===id?'on':''}" data-act="pick" data-id="${id}">${av(id,k)}${esc(k.name)}${k.group?` <small>${esc(k.group)}</small>`:''}</button>`).join(''):`<p class="hint">${Object.keys(S.kids).length?'Kein Kind gefunden – leg es unten neu an.':'Noch keine Kinder – leg das erste unten an.'}</p>`;
+ $('#lendBtn').disabled=!lendSel}
+
+function openBookForm(id,pre,coverUrl){const b=id?S.books[id]:Object.assign({title:'',author:'',isbn:'',cat:'',age:'',inv:'',note:''},pre||{});coverData=coverUrl||(id?cover(b):'');
+ openModal(`${X}<h2>${id?'Buch bearbeiten':'Neues Buch'}</h2>
+ <div class="coverrow"><span id="cprev">${coverData?`<img class="th big" src="${esc(coverData)}" ${IMG}>`:'<span class="th big">noch kein Bild</span>'}</span><div><div class="btns"><label class="btn sm light" for="coverIn">Cover fotografieren</label></div><p class="hint" id="aiHint">Ein Bild vom Cover hilft, das Buch wiederzuerkennen.</p></div></div>
+ <input id="coverIn" class="vh" type="file" accept="image/*" capture="environment">
+ <form id="bf" data-id="${id||''}">
+ <div class="field"><label for="fi">ISBN / Barcode</label><div class="inrow"><input id="fi" name="isbn" inputmode="numeric" value="${esc(b.isbn||'')}"><label class="btn sm light" for="isbnIn">Foto</label><button type="button" class="btn sm light" data-act="isbnlookup">Titel suchen</button></div></div>
+ <div class="field"><label for="ft">Titel *</label><input id="ft" name="title" required value="${esc(b.title)}"></div>
+ <div class="field"><label for="fa">Autor:in</label><input id="fa" name="author" value="${esc(b.author||'')}"></div>
+ <div class="two"><div class="field"><label for="fc">Kategorie</label><select id="fc" name="cat"><option value="">Ohne Kategorie</option>${S.settings.cats.map(c=>`<option ${c===b.cat?'selected':''}>${esc(c)}</option>`).join('')}</select></div>
+ <div class="field"><label for="fg">Alter</label><select id="fg" name="age">${AGES.map(a=>`<option value="${a}" ${a===b.age?'selected':''}>${a?a+' Jahren':'egal'}</option>`).join('')}</select></div></div>
+ <div class="field"><label for="fn">Inventar-Nr. (optional)</label><input id="fn" name="inv" value="${esc(b.inv||'')}" placeholder="z. B. 042"></div>
+ <div class="field"><label for="fo">Notiz</label><textarea id="fo" name="note" placeholder="z. B. Seite 3 eingerissen">${esc(b.note||'')}</textarea></div>
+ <div class="mfoot"><button class="btn big primary wide">Speichern</button></div></form><input id="isbnIn" class="vh" type="file" accept="image/*" capture="environment">`)}
+
+function handleCode(rawCode){const c=norm(rawCode)||String(rawCode).trim();const hits=Object.entries(S.books).filter(([,b])=>(c&&norm(b.isbn)===c)||(b.inv&&String(b.inv)===String(rawCode).trim()));
+ if(hits.length){showHits(hits,'Welches Exemplar?',c);return}newFromIsbn(c)}
+function showHits(hits,title,isbn){if(hits.length===1)return openBook(hits[0][0]);const act=activeMap();
+ openModal(`${X}<h2>${esc(title)}</h2><p class="hint">Dieses Buch gibt es ${hits.length}× in der Bücherei – tippe das richtige an.</p><div class="list" style="margin-top:12px">${hits.map(([id,b])=>`<div class="row" data-act="book" data-id="${id}">${thumb(b)}<div><span class="rt">${esc(b.title)}${b.inv?' · Nr. '+esc(b.inv):''}</span>${act[id]?`<span class="badge out">bei ${esc(kidName(act[id][1].kid))}</span>`:'<span class="badge ok">im Regal</span>'}</div></div>`).join('')}</div><div class="mfoot"><button class="btn sm light" data-act="newbook" data-id="${esc(isbn||'')}">Weiteres Exemplar anlegen</button></div>`)}
+async function newFromIsbn(c){let info=null;if(c.length>=10){busy('Buch wird gesucht …');info=await lookupIsbn(c);busy('')}
+ openBookForm(null,{isbn:c,title:info?info.title:'',author:info?info.author:''},info&&info.cover||'');
+ $('#aiHint').textContent=info?'Titel über die ISBN gefunden – bitte prüfen, Kategorie wählen und speichern.':'Zu dieser Nummer wurde nichts gefunden – bitte den Titel eintragen.';toast('Neues Buch – bitte kurz eintragen')}
+
+/* ---------- ISBN im Internet nachschlagen ---------- */
+async function getJSON(url){const ac=new AbortController(),t=setTimeout(()=>ac.abort(),7000);try{const r=await fetch(url,{signal:ac.signal});return r.ok?await r.json():null}catch(e){return null}finally{clearTimeout(t)}}
+async function lookupIsbn(isbn){
+ const g=await getJSON('https://www.googleapis.com/books/v1/volumes?q=isbn:'+encodeURIComponent(isbn));const v=g&&g.items&&g.items[0]&&g.items[0].volumeInfo;
+ if(v&&v.title){const im=v.imageLinks&&(v.imageLinks.thumbnail||v.imageLinks.smallThumbnail);return{title:[v.title,v.subtitle].filter(Boolean).join(' – '),author:(v.authors||[]).join(', '),cover:im?String(im).replace(/^http:/,'https:'):''}}
+ const o=await getJSON('https://openlibrary.org/api/books?format=json&jscmd=data&bibkeys=ISBN:'+encodeURIComponent(isbn));const w=o&&o['ISBN:'+isbn];
+ if(w&&w.title)return{title:w.title,author:(w.authors||[]).map(a=>a.name).join(', '),cover:w.cover?(w.cover.medium||w.cover.small||''):''};
+ return null}
+
+/* ---------- Barcode lesen: live und per Foto ---------- */
+const zxP=new Promise(r=>{const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js';s.onload=()=>r(window.ZXing||null);s.onerror=()=>r(null);document.head.appendChild(s)});
+function zxHints(Z){const h=new Map();h.set(Z.DecodeHintType.POSSIBLE_FORMATS,[Z.BarcodeFormat.EAN_13,Z.BarcodeFormat.EAN_8,Z.BarcodeFormat.UPC_A,Z.BarcodeFormat.UPC_E,Z.BarcodeFormat.CODE_128,Z.BarcodeFormat.QR_CODE]);h.set(Z.DecodeHintType.TRY_HARDER,true);return h}
+function stopScan(){if(scanStop){const f=scanStop;scanStop=null;try{f()}catch(e){}}}
+async function openScanner(cb){
+ openModal(`${X}<h2>Barcode scannen</h2><p class="hint" style="margin:2px 0 0">Halte den Strichcode auf der Rückseite des Buchs in den gelben Rahmen.</p><div class="cam"><video id="cam" playsinline muted autoplay></video><div class="frame"></div></div><p class="hint" id="camHint">Kamera startet …</p><div class="mfoot"><label class="btn sm light" for="photoIn">Lieber ein Foto machen</label><button class="btn sm light" data-act="typecode">Nummer eintippen</button></div><input id="photoIn" class="vh" type="file" accept="image/*" capture="environment">`);
+ scanCb=cb;const video=$('#cam');let done=false;const hit=t=>{if(done)return;done=true;stopScan();closeModal();if(navigator.vibrate)navigator.vibrate(60);cb(t)};
+ try{if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)throw{name:'NoCam'};
+  const Z=await zxP;if(!Z)throw{name:'NoLib'};if(!$('#cam'))return;
+  const reader=new Z.BrowserMultiFormatReader(zxHints(Z),250);scanStop=()=>reader.reset();
+  await reader.decodeFromConstraints({video:{facingMode:{ideal:'environment'},width:{ideal:1280}}},video,(res)=>{if(res)hit(res.getText())});
+  if($('#camHint'))$('#camHint').textContent='Ruhig halten – der Code wird automatisch erkannt.'}
+ catch(e){stopScan();const h=$('#camHint');if(h)h.textContent=e&&e.name==='NotAllowedError'?'Die App darf die Kamera nicht benutzen. Erlaube den Zugriff in den Browser-Einstellungen – oder mach ein Foto.':'Die Live-Kamera klappt auf diesem Gerät nicht – mach stattdessen ein Foto.'}}
+async function fileCanvas(file,max){const url=URL.createObjectURL(file);try{const img=await new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=url});
+ const k=Math.min(1,max/Math.max(img.naturalWidth,img.naturalHeight));const c=document.createElement('canvas');c.width=Math.max(1,Math.round(img.naturalWidth*k));c.height=Math.max(1,Math.round(img.naturalHeight*k));c.getContext('2d').drawImage(img,0,0,c.width,c.height);return c}finally{URL.revokeObjectURL(url)}}
+function variant(src,max,rot){const k=Math.min(1,max/Math.max(src.width,src.height)),w=Math.round(src.width*k),h=Math.round(src.height*k),c=document.createElement('canvas');
+ if(rot){c.width=h;c.height=w;const g=c.getContext('2d');g.translate(h,0);g.rotate(Math.PI/2);g.drawImage(src,0,0,w,h)}else{c.width=w;c.height=h;c.getContext('2d').drawImage(src,0,0,w,h)}return c}
+async function decode(file){let c;try{c=await fileCanvas(file,1800)}catch(e){return null}
+ if('BarcodeDetector' in window){try{const r=await new BarcodeDetector().detect(c);if(r&&r.length)return r[0].rawValue}catch(e){}}
+ const Z=await zxP;if(!Z)return null;const reader=new Z.MultiFormatReader();reader.setHints(zxHints(Z));
+ for(const size of [1200,1800,800])for(const rot of [0,1]){await new Promise(r=>setTimeout(r,0));try{const v=variant(c,size,rot);return reader.decodeWithState(new Z.BinaryBitmap(new Z.HybridBinarizer(new Z.HTMLCanvasElementLuminanceSource(v)))).getText()}catch(e){}}
+ return null}
+
+/* ---------- Anmeldung ---------- */
+const AUTHMSG={'auth/invalid-credential':'E-Mail oder Passwort stimmt nicht.','auth/wrong-password':'E-Mail oder Passwort stimmt nicht.','auth/user-not-found':'E-Mail oder Passwort stimmt nicht.','auth/invalid-email':'Die E-Mail-Adresse ist ungültig.','auth/email-already-in-use':'Für diese E-Mail gibt es schon ein Konto – bitte anmelden.','auth/weak-password':'Das Passwort braucht mindestens 6 Zeichen.','auth/too-many-requests':'Zu viele Versuche – bitte kurz warten.','auth/network-request-failed':'Keine Internetverbindung.','auth/missing-password':'Bitte ein Passwort eingeben.'};
+const amsg=e=>AUTHMSG[e&&e.code]||'Das hat nicht geklappt – bitte nochmal versuchen.';
+function openLogin(){openModal(`${X}<h2>Anmelden für das Team</h2><p class="hint" style="margin:2px 0 0">Eltern brauchen keine Anmeldung – sie sehen die Bücherliste auch so.</p>
+ <form id="lf"><div class="field"><label for="le">E-Mail</label><input id="le" name="email" type="email" autocomplete="username" required></div><div class="field"><label for="lp">Passwort</label><input id="lp" name="pw" type="password" autocomplete="current-password" required></div><p class="err" id="lerr"></p><div class="mfoot"><button class="btn big primary wide">Anmelden</button></div></form>
+ <div class="mfoot"><button class="btn sm light" data-act="register">Neu im Team? Konto anlegen</button><button class="btn sm light" data-act="reset">Passwort vergessen</button></div>`)}
+function openAccount(){const u=S.user;openModal(`${X}<h2>Dein Konto</h2><p>${esc(u.email)}</p><p class="hint">${S.role==='leitung'?'Du bist als Leitung freigeschaltet.':S.role?'Du bist als Team freigeschaltet.':u.emailVerified?'Noch nicht freigeschaltet.':'E-Mail noch nicht bestätigt.'}</p><div class="mfoot"><button class="btn sm light" data-act="reset">Passwort ändern</button><button class="btn sm danger" data-act="logout">Abmelden</button></div>`)}
+const lval=()=>({email:($('#le')||{}).value||'',pw:($('#lp')||{}).value||''});
+const lerr=t=>{const e=$('#lerr');if(e)e.textContent=t};
+
+/* ---------- Aktionen ---------- */
+const setOut=(id,out,due)=>{const b=S.books[id];return b?put('books',id,Object.assign({},b,{out,due:out?(due||''):''}),true):false};
+async function reconcile(){if(S.ro)return;const act=activeMap();for(const [id,b] of Object.entries(S.books)){const a=act[id],due=a?a[1].due||'':'';if(!!b.out!==!!a||(b.due||'')!==due)await put('books',id,Object.assign({},b,{out:!!a,due}),true)}render()}
+async function doReturn(lid){const l=S.loans[lid];if(!l)return;const before=Object.assign({},l);
+ if(await put('loans',lid,Object.assign({},l,{back:today()}))){await setOut(l.book,false);render();toast(`„${(S.books[l.book]||{}).title||'Buch'}“ ist wieder im Regal`,async()=>{if(await put('loans',lid,before)){await setOut(before.book,true,before.due);render()}})}}
+async function delBook(id){if(activeMap()[id]){toast('Das Buch ist gerade ausgeliehen – erst zurückgeben');return}
+ if(!await ask(`„${S.books[id].title}“ wirklich löschen? Der Verlauf geht mit.`,'Löschen'))return;closeModal();
+ for(const [lid,l] of Object.entries(S.loans))if(l.book===id)await put('loans',lid,null,true);await put('books',id,null);toast('Buch gelöscht')}
+async function delKid(id){const k=S.kids[id],n=Object.values(activeMap()).filter(([,l])=>l.kid===id).length;
+ if(n){toast(`${k.name} hat noch ${n===1?'ein Buch':n+' Bücher'} – erst zurückgeben`);return}
+ if(!await ask(`${k.name} und den ganzen Ausleih-Verlauf löschen? Das geht nicht rückgängig.`,'Löschen'))return;closeModal();
+ for(const [lid,l] of Object.entries(S.loans))if(l.kid===id)await put('loans',lid,null,true);await put('kids',id,null);toast('Kind gelöscht')}
+function renameCat(i){const old=S.settings.cats[i];openModal(`${X}<h2>Kategorie umbenennen</h2><form id="rf" data-id="${i}"><div class="field"><label for="rn">Name</label><input id="rn" name="c" required value="${esc(old)}"></div><div class="mfoot"><button class="btn primary wide">Speichern</button></div></form>`)}
+async function delCat(i){const c=S.settings.cats[i],books=Object.entries(S.books).filter(([,b])=>b.cat===c);
+ if(!await ask(`Kategorie „${c}“ löschen?${books.length?` ${books.length} ${books.length===1?'Buch landet':'Bücher landen'} dann bei „Ohne Kategorie“.`:''}`,'Löschen'))return;
+ S.settings.cats=S.settings.cats.filter((_,j)=>j!==i);await putSettings();for(const [id,b] of books)await put('books',id,Object.assign({},b,{cat:''}),true);render()}
+function saveFile(name,text,type){const url=URL.createObjectURL(new Blob([text],{type}));const a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),4000)}
+function csv(){const act=activeMap(),q=v=>'"'+String(v??'').replace(/"/g,'""')+'"';
+ return '﻿'+[['Titel','Autor:in','Kategorie','Alter','ISBN','Inventar-Nr.','Status','Bei Kind','Ausgeliehen am','Zurück bis'].map(q).join(';')].concat(Object.entries(S.books).sort((a,b)=>String(a[1].title).localeCompare(String(b[1].title))).map(([id,b])=>{const a=act[id];return [b.title,b.author,b.cat,b.age,b.isbn,b.inv,a?'ausgeliehen':'im Regal',a?kidName(a[1].kid):'',a?a[1].out:'',a?a[1].due:''].map(q).join(';')})).join('\r\n')}
+async function importFile(file){let d;try{d=JSON.parse(await file.text())}catch(e){toast('Die Datei ist keine gültige Sicherung');return}
+ if(!d||typeof d.books!=='object'||typeof d.kids!=='object'||typeof d.loans!=='object'){toast('Die Datei ist keine gültige Sicherung');return}
+ const n=Object.keys(d.books).length;if(!await ask(`Sicherung mit ${n} Büchern einspielen? Gleiche Einträge werden überschrieben, alles andere bleibt.`,'Einspielen'))return;
+ busy('Sicherung wird eingespielt …');try{for(const c of ['books','kids','loans'])for(const [id,o] of Object.entries(d[c]))if(o&&typeof o==='object')await put(c,id,o,true);
+  if(d.settings&&Array.isArray(d.settings.cats)){S.settings={days:+d.settings.days||14,cats:d.settings.cats.map(String)};await putSettings()}await reconcile();toast('Sicherung eingespielt')}finally{busy('');render()}}
+
+const ACT={close:closeModal,askok:()=>answer(true),askno:()=>answer(false),undo(){const f=undoFn;$('#toast').hidden=true;undoFn=null;if(f)f()},
+ scan:()=>openScanner(handleCode),
+ typecode(){openModal(`${X}<h2>Nummer eintippen</h2><p class="hint">Die Nummer steht unter dem Strichcode, meist beginnend mit 978.</p><form id="mf"><div class="inrow"><input name="code" inputmode="numeric" placeholder="978…" required autofocus><button class="btn sm primary">Suchen</button></div></form>`)},
+ book:id=>openBook(id),kid:id=>openKid(id),lend:id=>openLend(id),return:id=>doReturn(id),
+ newbook:id=>{if(S.ro){openLogin();return}openBookForm(null,id?{isbn:id}:{})},editbook:id=>openBookForm(id),delbook:id=>delBook(id),editkid:id=>openKidForm(id),delkid:id=>delKid(id),
+ st(id){S.st=id;V.buecher.fill()},cat(id){S.cat=S.cat===id?'':id;V.buecher.fill()},
+ pick(id){lendSel=id;fillPick()},
+ async quickkid(){const n=$('#nk').value.trim();if(!n){$('#nk').focus();return}const id=uid('k');if(await put('kids',id,{name:n,group:$('#nkg').value.trim(),created:today()})){lendSel=id;$('#nk').value='';$('#lq').value='';fillPick()}},
+ async dolend(bookId){if(!lendSel)return;if(activeMap()[bookId]){toast('Das Buch ist schon ausgeliehen');closeModal();return}const due=$('#due').value||addDays(today(),+S.settings.days||14),kid=lendSel,t=S.books[bookId].title;closeModal();
+  if(!await put('loans',uid('l'),{book:bookId,kid,out:today(),due,back:null}))return;await setOut(bookId,true,due);render();toast(`„${t}“ ist jetzt bei ${kidName(kid)}`)},
+ async isbnlookup(){const f=$('#bf');const c=norm(f.isbn.value);if(c.length<10){toast('Bitte zuerst die ISBN eintragen');return}busy('Buch wird gesucht …');const info=await lookupIsbn(c);busy('');if(!$('#bf'))return;
+  if(!info){$('#aiHint').textContent='Zu dieser Nummer wurde nichts gefunden.';return}if(!f.title.value.trim())f.title.value=info.title;if(!f.author.value.trim())f.author.value=info.author;
+  if(info.cover&&!coverData){coverData=info.cover;$('#cprev').innerHTML=`<img class="th big" src="${esc(coverData)}" ${IMG}>`}$('#aiHint').textContent='Gefunden – bitte kurz prüfen.'},
+ rencat:i=>renameCat(+i),delcat:i=>delCat(+i),
+ async delstaff(em){if(!await ask(`Zugang für ${em} entfernen? Die Person sieht danach nur noch die Elternansicht.`,'Entfernen'))return;await put('staff',em,null);toast('Zugang entfernt')},
+ exjson:()=>saveFile(`kita-buecherei-sicherung-${today()}.json`,JSON.stringify({books:S.books,kids:S.kids,loans:S.loans,settings:S.settings}),'application/json'),
+ excsv:()=>saveFile(`kita-buecherei-buecher-${today()}.csv`,csv(),'text/csv'),
+ account:()=>S.user?openAccount():openLogin(),
+ async register(){const {email,pw}=lval();if(!email||!pw){lerr('Bitte oben E-Mail und ein neues Passwort (mind. 6 Zeichen) eintragen, dann hier tippen.');return}
+  try{busy('Konto wird angelegt …');const c=await F.createUserWithEmailAndPassword(auth,email.trim(),pw);await F.sendEmailVerification(c.user);busy('');closeModal();toast('Fast fertig: Bitte bestätige den Link in deiner E-Mail')}catch(e){busy('');lerr(amsg(e))}},
+ async reset(){const email=S.user?S.user.email:lval().email.trim();if(!email){lerr('Bitte oben deine E-Mail eintragen, dann hier tippen.');return}
+  try{await F.sendPasswordResetEmail(auth,email);closeModal();toast('Wir haben dir eine E-Mail zum Zurücksetzen geschickt')}catch(e){lerr(amsg(e));if(!$('#lerr'))toast(amsg(e))}},
+ async logout(){closeModal();await F.signOut(auth);toast('Abgemeldet')},
+ async verified(){try{await S.user.reload();await S.user.getIdToken(true);S.user=auth.currentUser;await checkStaff();if(!S.user.emailVerified)toast('Noch nicht bestätigt – bitte den Link in der E-Mail antippen')}catch(e){toast(amsg(e))}},
+ async resend(){try{await F.sendEmailVerification(S.user);toast('E-Mail ist unterwegs')}catch(e){toast(amsg(e))}},
+ async recheck(){await checkStaff();if(!S.role)toast('Noch nicht freigeschaltet')}};
+document.addEventListener('click',e=>{const t=e.target.closest('[data-act]');if(!t||t.tagName==='LABEL')return;const f=ACT[t.dataset.act];if(f){e.preventDefault();e.stopPropagation();f(t.dataset.id)}});
+document.addEventListener('input',e=>{const id=e.target.id;if(id==='q'){S.q=e.target.value;V.buecher.fill()}else if(id==='kq'){S.kq=e.target.value;V.kinder.fill()}else if(id==='lq')fillPick()});
+document.addEventListener('change',async e=>{const el=e.target,file=el.files&&el.files[0];
+ if(el.id==='days'){const v=Math.max(1,Math.min(90,parseInt(el.value,10)||14));el.value=v;if(v!==S.settings.days){S.settings.days=v;await putSettings();toast('Leihdauer: '+v+' Tage')}return}
+ if(!file)return;el.value='';
+ if(el.id==='photoIn'){stopScan();const cb=scanCb||handleCode;busy('Foto wird gelesen …');const code=await decode(file);busy('');if(code){closeModal();cb(code)}else{const h=$('#camHint');if(h)h.textContent='Auf dem Foto wurde kein Barcode erkannt. Nah ran, gerade halten, gutes Licht – oder die Nummer eintippen.'}}
+ else if(el.id==='isbnIn'){busy('Barcode wird gelesen …');const code=await decode(file);busy('');if(code&&$('#fi')){$('#fi').value=norm(code)||code;ACT.isbnlookup()}else toast('Kein Barcode erkannt – Nummer bitte eintippen')}
+ else if(el.id==='coverIn'){try{const sm=await fileCanvas(file,300);coverData=sm.toDataURL('image/jpeg',.72);$('#cprev').innerHTML=`<img class="th big" src="${coverData}" alt="">`}catch(err){toast('Foto konnte nicht gelesen werden')}}
+ else if(el.id==='impIn')importFile(file)});
+document.addEventListener('submit',async e=>{e.preventDefault();const f=e.target,v=k=>(f.elements[k]?f.elements[k].value:'').trim();
+ if(f.id==='bf'){const id=f.dataset.id||uid('b'),old=S.books[id]||{};const b={title:v('title'),author:v('author'),cat:v('cat'),age:v('age'),isbn:norm(v('isbn'))||v('isbn'),inv:v('inv'),note:v('note'),cover:coverData||'',out:!!old.out,due:old.due||'',created:old.created||today()};
+  if(!b.title)return;closeModal();if(await put('books',id,b)){toast('Buch gespeichert');openBook(id)}}
+ else if(f.id==='kf'){const n=v('name');if(!n)return;if(await put('kids',uid('k'),{name:n,group:v('group'),created:today()})){f.reset();f.elements.name.focus();toast(n+' ist eingetragen')}}
+ else if(f.id==='kef'){const id=f.dataset.id;await put('kids',id,Object.assign({},S.kids[id],{name:v('name')||S.kids[id].name,group:v('group')}));openKid(id)}
+ else if(f.id==='cf'){const c=v('c');if(!c)return;if(S.settings.cats.includes(c)){toast('Die Kategorie gibt es schon');return}S.settings.cats=S.settings.cats.concat(c);f.reset();await putSettings()}
+ else if(f.id==='rf'){const i=+f.dataset.id,old=S.settings.cats[i],c=v('c');closeModal();if(!c||c===old)return;if(S.settings.cats.includes(c)){toast('Die Kategorie gibt es schon');return}
+  S.settings.cats=S.settings.cats.map((x,j)=>j===i?c:x);await putSettings();for(const [id,b] of Object.entries(S.books))if(b.cat===old)await put('books',id,Object.assign({},b,{cat:c}),true);render()}
+ else if(f.id==='mf'){const cb=scanCb||handleCode;closeModal();cb(v('code'))}
+ else if(f.id==='sf'){const em=v('email').toLowerCase();if(!em.includes('@'))return;await put('staff',em,{role:v('role')==='leitung'?'leitung':'team',added:today(),by:S.user.email});f.reset();toast(em+' ist freigeschaltet')}
+ else if(f.id==='lf'){const {email,pw}=lval();lerr('');try{busy('Anmelden …');await F.signInWithEmailAndPassword(auth,email.trim(),pw);busy('');closeModal();toast('Willkommen!')}catch(err){busy('');lerr(amsg(err))}}});
+
+$('#ver').textContent=VERSION;
+render();init();
+}
+
+</script>
+</body>
+</html>

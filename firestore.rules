@@ -1,0 +1,51 @@
+rules_version = '2';
+
+// Kita-Bücherei – Sicherheitsregeln
+// Eltern (ohne Anmeldung): dürfen nur die Bücherliste und die Einstellungen lesen.
+// Team: angemeldet, E-Mail bestätigt und in der Sammlung "staff" eingetragen.
+// Leitung: wie Team, zusätzlich darf sie Zugänge (staff) verwalten.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null
+        && request.auth.token.email != null
+        && request.auth.token.email_verified == true;
+    }
+    function staffPath() {
+      return /databases/$(database)/documents/staff/$(request.auth.token.email.lower());
+    }
+    function isStaff() {
+      return signedIn() && exists(staffPath());
+    }
+    function isLeitung() {
+      return isStaff() && get(staffPath()).data.role == 'leitung';
+    }
+
+    // Bücher und Einstellungen: alle dürfen lesen, nur das Team schreiben
+    match /books/{bookId} {
+      allow read: if true;
+      allow write: if isStaff();
+    }
+    match /settings/{docId} {
+      allow read: if true;
+      allow write: if isStaff();
+    }
+
+    // Kinder und Ausleihen: nur das Team
+    match /kids/{kidId} {
+      allow read, write: if isStaff();
+    }
+    match /loans/{loanId} {
+      allow read, write: if isStaff();
+    }
+
+    // Zugänge: das Team darf die Liste sehen, nur die Leitung ändern.
+    // Jede angemeldete Person darf prüfen, ob sie selbst freigeschaltet ist.
+    match /staff/{email} {
+      allow get: if signedIn() && email == request.auth.token.email.lower();
+      allow read: if isStaff();
+      allow write: if isLeitung();
+    }
+  }
+}

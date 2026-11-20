@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kita-Bücherei einrichten</title>
+<style>
+/* VOICE: ruhig, Schritt für Schritt, für Nicht-Techniker:innen
+   IDEA: ein Bastelbogen – nummerierte Schritte zum Abhaken
+   PICTURE: die Schrittliste selbst, mit großen bunten Nummern
+   COLOUR and TYPE: Sonnengelb wie die App, Himmelblau für Links, Systemschrift
+   LAYOUT: eine Spalte, max. 760px, Abschnitte A/B/C */
+:root{color-scheme:light dark;--bg:light-dark(#FFFDF6,#16132A);--card:light-dark(#fff,#221E3B);--ink:light-dark(#2A2342,#F3EFFF);--soft:light-dark(#6B6488,#B8B0D8);--line:light-dark(#EFE7D3,#383258);--sun:#FFC83D;--sky:light-dark(#1A5CCB,#7FB0FF);--chip:light-dark(#FFF4D2,#2E2950)}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.6 system-ui,-apple-system,"Segoe UI",sans-serif;overflow-x:clip}
+header{background:var(--sun);color:#2A2342;padding:28px max(5vw,16px) 24px}
+header h1{margin:0;font-size:clamp(30px,6vw,44px);line-height:1.05}
+header p{margin:8px 0 0;max-width:62ch;font-weight:600}
+main{max-width:760px;margin:0 auto;padding:24px max(4vw,16px) 60px}
+h2{font-size:28px;line-height:1.1;margin:36px 0 6px}
+h2+p{margin-top:0;color:var(--soft)}
+ol.s{list-style:none;padding:0;margin:16px 0;counter-reset:s;display:grid;gap:12px}
+ol.s>li{counter-increment:s;background:var(--card);border:2px solid var(--line);border-radius:20px;padding:16px 16px 16px 68px;position:relative}
+ol.s>li::before{content:counter(s);position:absolute;left:14px;top:14px;width:40px;height:40px;border-radius:50%;background:var(--c,#2F7DF6);color:#fff;display:grid;place-items:center;font-weight:800;font-size:20px}
+ol.s h3{margin:2px 0 6px;font-size:20px}
+ol.s ul,ol.s ol{padding-left:20px;margin:6px 0}ol.s li li{margin:4px 0}
+a{color:var(--sky);overflow-wrap:anywhere}
+b{font-weight:700}
+code,.k{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:15px;background:var(--chip);border-radius:6px;padding:1px 6px;overflow-wrap:anywhere}
+pre{background:#1E1A33;color:#F3EFFF;border-radius:14px;padding:14px;overflow-x:auto;font-size:13px;line-height:1.45;margin:10px 0 0}
+.copy{border:0;background:#2F7DF6;color:#fff;font:700 15px system-ui;border-radius:999px;padding:0 16px;min-height:42px;cursor:pointer;margin-top:10px}
+.box{background:var(--chip);border-radius:18px;padding:14px 16px;margin:14px 0}
+.box.warn{background:light-dark(#FFE6EC,#4A1E2A)}
+table{border-collapse:collapse;width:100%;margin:8px 0;font-size:15px}td{border-bottom:1px solid var(--line);padding:6px 8px 6px 0;vertical-align:top}td:first-child{font-weight:700;width:36%;overflow-wrap:anywhere}
+.toc{display:flex;flex-wrap:wrap;gap:8px;margin:0}.toc a{background:var(--card);border:2px solid var(--line);border-radius:999px;padding:6px 14px;text-decoration:none;font-weight:700}
+</style>
+</head>
+<body>
+<header><h1>Kita-Bücherei einrichten</h1><p>Einmal einrichten (ca. 45 Minuten), danach läuft die App ohne Claude: Eltern öffnen sie ohne Anmeldung, das Team meldet sich mit E-Mail und Passwort an.</p></header>
+<main>
+<nav class="toc"><a href="#a">A · Einrichten</a><a href="#b">B · Updates &amp; Fehler</a><a href="#c">C · Gut zu wissen</a></nav>
+
+<div class="box warn"><b>Vorher klären:</b> Die Namen der Kinder werden bei Google Firebase gespeichert (Rechenzentrum Frankfurt, Google ist aber ein US-Unternehmen). Bitte holt vorab das OK des Trägers bzw. der Datenschutzbeauftragten des Kirchenkreises ein. Nutzt für alles ein <b>dienstliches Kita-Konto</b>, kein privates.</div>
+
+<div class="box"><b>Im Ordner sind:</b>
+<table>
+<tr><td>index.html</td><td>die App selbst – wird bei Updates ausgetauscht</td></tr>
+<tr><td>config.js</td><td>die Zugangsdaten zu eurer Datenbank – einmal ausfüllen, danach nie wieder anfassen</td></tr>
+<tr><td>firestore.rules</td><td>die Sicherheitsregeln (wer darf was sehen)</td></tr>
+<tr><td>manifest.webmanifest, icon-192.png, icon-512.png</td><td>damit die App auf dem Handy mit eurem Logo erscheint</td></tr>
+</table></div>
+
+<h2 id="a">A · Einrichten (einmalig)</h2>
+<p>Die Bezeichnungen in Firebase und GitHub können je nach Spracheinstellung leicht abweichen.</p>
+<ol class="s">
+<li style="--c:#F0436A"><h3>Firebase-Projekt anlegen</h3><ol>
+<li>Öffne <a href="https://console.firebase.google.com/">console.firebase.google.com</a> und melde dich mit dem Google-Konto der Kita an.</li>
+<li><b>„Projekt erstellen“</b> → Name z. B. <code>kita-buecherei</code> → Google Analytics <b>ausschalten</b> → „Projekt erstellen“.</li>
+<li>Der kostenlose Tarif („Spark“) reicht. Eine Zahlungsmethode ist nicht nötig.</li></ol></li>
+
+<li style="--c:#2F7DF6"><h3>Anmeldung mit E-Mail einschalten</h3><ol>
+<li>Links unter „Build“ bzw. „Erstellen“: <b>Authentication</b> → „Jetzt starten“.</li>
+<li>Bei den Anbietern <b>„E-Mail/Passwort“</b> wählen, den <b>ersten</b> Schalter aktivieren, „Speichern“.</li>
+<li>Optional: Reiter „Vorlagen“ → Vorlagensprache auf <b>Deutsch</b> stellen, damit die Bestätigungs-E-Mails deutsch sind.</li></ol></li>
+
+<li style="--c:#23964A"><h3>Datenbank anlegen und schützen</h3><ol>
+<li>Links: <b>Firestore Database</b> → „Datenbank erstellen“.</li>
+<li>Standort: <b>europe-west3 (Frankfurt)</b> – das lässt sich später nicht mehr ändern.</li>
+<li>„Im <b>Produktionsmodus</b> starten“ → „Erstellen“.</li>
+<li>Oben den Reiter <b>„Regeln“</b> öffnen, den vorhandenen Text komplett löschen, den Text unten einfügen und <b>„Veröffentlichen“</b> tippen.</li></ol>
+<pre id="rules">rules_version = &#x27;2&#x27;;
+
+// Kita-Bücherei – Sicherheitsregeln
+// Eltern (ohne Anmeldung): dürfen nur die Bücherliste und die Einstellungen lesen.
+// Team: angemeldet, E-Mail bestätigt und in der Sammlung &quot;staff&quot; eingetragen.
+// Leitung: wie Team, zusätzlich darf sie Zugänge (staff) verwalten.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null
+        &amp;&amp; request.auth.token.email != null
+        &amp;&amp; request.auth.token.email_verified == true;
+    }
+    function staffPath() {
+      return /databases/$(database)/documents/staff/$(request.auth.token.email.lower());
+    }
+    function isStaff() {
+      return signedIn() &amp;&amp; exists(staffPath());
+    }
+    function isLeitung() {
+      return isStaff() &amp;&amp; get(staffPath()).data.role == &#x27;leitung&#x27;;
+    }
+
+    // Bücher und Einstellungen: alle dürfen lesen, nur das Team schreiben
+    match /books/{bookId} {
+      allow read: if true;
+      allow write: if isStaff();
+    }
+    match /settings/{docId} {
+      allow read: if true;
+      allow write: if isStaff();
+    }
+
+    // Kinder und Ausleihen: nur das Team
+    match /kids/{kidId} {
+      allow read, write: if isStaff();
+    }
+    match /loans/{loanId} {
+      allow read, write: if isStaff();
+    }
+
+    // Zugänge: das Team darf die Liste sehen, nur die Leitung ändern.
+    // Jede angemeldete Person darf prüfen, ob sie selbst freigeschaltet ist.
+    match /staff/{email} {
+      allow get: if signedIn() &amp;&amp; email == request.auth.token.email.lower();
+      allow read: if isStaff();
+      allow write: if isLeitung();
+    }
+  }
+}
+</pre><button class="copy" data-copy="rules">Regeln kopieren</button></li>
+
+<li style="--c:#F59E0B"><h3>Zugangsdaten in config.js eintragen</h3><ol>
+<li>Oben links auf das Zahnrad → <b>Projekteinstellungen</b> → unten bei „Meine Apps“ auf das Symbol <code>&lt;/&gt;</code> (Web).</li>
+<li>Name <code>Kita-Bücherei</code> eingeben, „Firebase Hosting“ <b>nicht</b> anhaken, „App registrieren“.</li>
+<li>Es erscheint ein Code mit <code>const firebaseConfig = { apiKey: "…", … }</code>.</li>
+<li>Öffne <b>config.js</b> mit einem einfachen Texteditor (Windows: „Editor“, Mac: „TextEdit“ im Menü Format → „In reinen Text umwandeln“) und trage die sechs Werte zwischen die Anführungszeichen ein: <code>apiKey</code>, <code>authDomain</code>, <code>projectId</code>, <code>storageBucket</code>, <code>messagingSenderId</code>, <code>appId</code>. Speichern.</li></ol>
+<p>Die Werte sind kein Geheimnis – geschützt werden die Daten durch die Regeln aus Schritt 3.</p></li>
+
+<li style="--c:#8B5CF6"><h3>App ins Internet stellen (GitHub Pages, kostenlos)</h3><ol>
+<li>Auf <a href="https://github.com/">github.com</a> ein Konto mit der Kita-E-Mail anlegen. Der Benutzername steht später in der Adresse, z. B. <code>kita-regenbogen</code>.</li>
+<li>Oben rechts „+“ → <b>„New repository“</b> → Name <code>buecherei</code> → <b>Public</b> → „Create repository“.</li>
+<li>Auf „uploading an existing file“ klicken und <b>alle Dateien</b> aus dem Ordner hineinziehen (index.html, config.js, manifest.webmanifest, icon-192.png, icon-512.png, firestore.rules) → unten „Commit changes“.</li>
+<li>Im Repository: <b>Settings → Pages</b> → bei „Source“: „Deploy from a branch“ → Branch <code>main</code>, Ordner <code>/ (root)</code> → „Save“.</li>
+<li>Nach 1–2 Minuten ist die App erreichbar unter <code>https://BENUTZERNAME.github.io/buecherei/</code></li></ol>
+<p>Statt GitHub geht jeder Webspace, der HTTPS kann – z. B. ein Bereich auf der Website des Kirchenkreises, wenn die IT einverstanden ist. Einfach alle Dateien in einen Ordner hochladen.</p></li>
+
+<li style="--c:#0FA3A3"><h3>Adresse in Firebase freigeben</h3><ol>
+<li>Firebase → Authentication → Reiter <b>„Einstellungen“</b> → „Autorisierte Domains“ → <b>„Domain hinzufügen“</b>.</li>
+<li>Eintragen: <code>BENUTZERNAME.github.io</code> (ohne https:// und ohne /buecherei).</li></ol></li>
+
+<li style="--c:#E25DB0"><h3>Die erste Leitung freischalten</h3><ol>
+<li>Die App öffnen → oben <b>„Team-Anmeldung“</b> → E-Mail der Leitung und ein Passwort eintragen → <b>„Neu im Team? Konto anlegen“</b>.</li>
+<li>Den Link in der Bestätigungs-E-Mail antippen (auch im Spam-Ordner nachsehen – Absender ist „noreply@…firebaseapp.com“).</li>
+<li>In Firebase: <b>Firestore Database</b> → „Sammlung starten“ → Sammlungs-ID <code>staff</code> → „Weiter“.</li>
+<li>Dokument-ID: die E-Mail-Adresse der Leitung <b>in Kleinbuchstaben</b>, z. B. <code>leitung@beispiel.de</code>. Feld: <code>role</code>, Typ „string“, Wert <code>leitung</code> → „Speichern“.</li>
+<li>Zurück in der App: „Ich habe bestätigt“ bzw. „Nochmal prüfen“ tippen. Oben steht jetzt „Angemeldet: Leitung“.</li></ol>
+<p>Ab jetzt schaltet die Leitung alle weiteren Personen direkt in der App frei: <b>„Einstellungen &amp; Team“ → E-Mail eintragen → „Freischalten“</b>. Firebase braucht ihr dafür nicht mehr.</p></li>
+
+<li style="--c:#FF7A3D"><h3>Link verteilen</h3><ul>
+<li><b>Team:</b> Link schicken. Jede Person legt sich mit der freigeschalteten E-Mail ein Konto an.</li>
+<li><b>Eltern:</b> einfach den Link schicken oder als QR-Code am Eingang aushängen. Keine Anmeldung nötig – sie sehen nur die Bücherliste.</li>
+<li>Auf dem Handy: Link öffnen → „Zum Home-Bildschirm“. Dann erscheint die App mit eurem Logo.</li></ul></li>
+</ol>
+
+<h2 id="b">B · Updates und Fehler beheben</h2>
+<p>Eure Daten liegen in Firebase. Ein Update tauscht nur die App-Datei aus – Bücher, Kinder und Ausleihen bleiben erhalten.</p>
+<ol class="s">
+<li style="--c:#2F7DF6"><h3>Änderung bekommen</h3><p>Fehler gefunden oder Wunsch? Beschreibe ihn Claude (in diesem oder einem neuen Chat) und häng die <b>aktuelle index.html</b> an. Du bekommst eine neue index.html zurück.</p></li>
+<li style="--c:#23964A"><h3>Alte Version sichern</h3><p>Bewahre die bisherige index.html auf deinem Computer auf, z. B. als <code>index-alt.html</code>. Läuft etwas schief, lädst du sie einfach wieder hoch.</p></li>
+<li style="--c:#F59E0B"><h3>Neue Version hochladen</h3><ol>
+<li>GitHub → euer Repository → <b>„Add file“ → „Upload files“</b>.</li>
+<li>Die neue <b>index.html</b> hineinziehen → „Commit changes“. GitHub ersetzt die alte Datei.</li>
+<li>Nach 1–2 Minuten ist das Update für alle da. Auf dem Handy die App ggf. einmal schließen und neu öffnen.</li></ol>
+<p><b>Wichtig:</b> config.js beim Update <b>nicht</b> überschreiben. Ändern sich die Sicherheitsregeln, ersetzt ihr sie wie in Schritt A3.</p></li>
+<li style="--c:#8B5CF6"><h3>Selbst eine Kleinigkeit ändern</h3><p>Auf GitHub kannst du index.html anklicken und mit dem Stift-Symbol direkt bearbeiten, z. B. einen Text oder eine Telefonnummer. Mit „Commit changes“ speichern. Jede Version bleibt unter „History“ erhalten.</p></li>
+</ol>
+
+<h2 id="c">C · Gut zu wissen</h2>
+<div class="box"><b>Wer sieht was?</b>
+<table>
+<tr><td>Eltern</td><td>ohne Anmeldung: Bücherliste mit „im Regal“ / „ausgeliehen“ – keine Namen, kein Verlauf</td></tr>
+<tr><td>Team</td><td>angemeldet und freigeschaltet: alles, auch die Namen der Kinder</td></tr>
+<tr><td>Leitung</td><td>wie Team, zusätzlich: Kolleg:innen freischalten und entfernen</td></tr>
+</table>
+Das ist in den Sicherheitsregeln der Datenbank festgelegt – nicht nur in der Ansicht. Wer sich ein Konto anlegt, aber nicht freigeschaltet ist, sieht nur die Elternansicht.</div>
+<div class="box"><b>Kosten:</b> Der kostenlose Tarif von Firebase und GitHub Pages reicht für eine Kita normalerweise locker. Ohne hinterlegte Zahlungsmethode kann auch nichts kosten – im schlimmsten Fall pausiert die Datenbank bis zum nächsten Tag.</div>
+<div class="box"><b>Öffentliches Repository:</b> Bei GitHub sind die App-Dateien öffentlich einsehbar. Das ist unbedenklich: Darin stehen keine Kinderdaten, nur der Programmcode und die Projektadresse.</div>
+<div class="box"><b>Titelsuche:</b> Beim Scannen schickt die App nur die ISBN-Nummer an Google Books bzw. Open Library, um Titel und Autor:in zu finden – keine Namen.</div>
+<div class="box"><b>Passwort vergessen?</b> In der App: „Team-Anmeldung“ → E-Mail eintragen → „Passwort vergessen“.</div>
+</main>
+<script>
+{document.addEventListener('click',async e=>{const b=e.target.closest('[data-copy]');if(!b)return;const t=document.getElementById(b.dataset.copy).textContent;try{await navigator.clipboard.writeText(t);b.textContent='Kopiert ✓'}catch(err){const r=document.createRange();r.selectNodeContents(document.getElementById(b.dataset.copy));const s=getSelection();s.removeAllRanges();s.addRange(r);b.textContent='Markiert – jetzt Strg+C'}})}
+</script>
+</body>
+</html>

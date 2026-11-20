@@ -2,15 +2,14 @@ rules_version = '2';
 
 // Kita-Bücherei – Sicherheitsregeln
 // Eltern (ohne Anmeldung): dürfen nur die Bücherliste und die Einstellungen lesen.
-// Team: angemeldet, E-Mail bestätigt und in der Sammlung "staff" eingetragen.
+// Team: angemeldet und in der Sammlung "staff" eingetragen (Konten legt die Leitung an).
 // Leitung: wie Team, zusätzlich darf sie Zugänge (staff) verwalten.
 service cloud.firestore {
   match /databases/{database}/documents {
 
     function signedIn() {
       return request.auth != null
-        && request.auth.token.email != null
-        && request.auth.token.email_verified == true;
+        && request.auth.token.email != null;
     }
     function staffPath() {
       return /databases/$(database)/documents/staff/$(request.auth.token.email.lower());

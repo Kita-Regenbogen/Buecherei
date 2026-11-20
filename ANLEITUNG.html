@@ -61,7 +61,7 @@ table{border-collapse:collapse;width:100%;margin:8px 0;font-size:15px}td{border-
 <li style="--c:#2F7DF6"><h3>Anmeldung mit E-Mail einschalten</h3><ol>
 <li>Links unter „Build“ bzw. „Erstellen“: <b>Authentication</b> → „Jetzt starten“.</li>
 <li>Bei den Anbietern <b>„E-Mail/Passwort“</b> wählen, den <b>ersten</b> Schalter aktivieren, „Speichern“.</li>
-<li>Optional: Reiter „Vorlagen“ → Vorlagensprache auf <b>Deutsch</b> stellen, damit die Bestätigungs-E-Mails deutsch sind.</li></ol></li>
+<li>Optional: Reiter „Vorlagen“ → Vorlagensprache auf <b>Deutsch</b> stellen (betrifft die Mail bei „Passwort vergessen“).</li></ol></li>
 
 <li style="--c:#23964A"><h3>Datenbank anlegen und schützen</h3><ol>
 <li>Links: <b>Firestore Database</b> → „Datenbank erstellen“.</li>
@@ -72,15 +72,14 @@ table{border-collapse:collapse;width:100%;margin:8px 0;font-size:15px}td{border-
 
 // Kita-Bücherei – Sicherheitsregeln
 // Eltern (ohne Anmeldung): dürfen nur die Bücherliste und die Einstellungen lesen.
-// Team: angemeldet, E-Mail bestätigt und in der Sammlung &quot;staff&quot; eingetragen.
+// Team: angemeldet und in der Sammlung &quot;staff&quot; eingetragen (Konten legt die Leitung an).
 // Leitung: wie Team, zusätzlich darf sie Zugänge (staff) verwalten.
 service cloud.firestore {
   match /databases/{database}/documents {
 
     function signedIn() {
       return request.auth != null
-        &amp;&amp; request.auth.token.email != null
-        &amp;&amp; request.auth.token.email_verified == true;
+        &amp;&amp; request.auth.token.email != null;
     }
     function staffPath() {
       return /databases/$(database)/documents/staff/$(request.auth.token.email.lower());
@@ -141,15 +140,14 @@ service cloud.firestore {
 <li>Eintragen: <code>BENUTZERNAME.github.io</code> (ohne https:// und ohne /buecherei).</li></ol></li>
 
 <li style="--c:#E25DB0"><h3>Die erste Leitung freischalten</h3><ol>
-<li>Die App öffnen → oben <b>„Team-Anmeldung“</b> → E-Mail der Leitung und ein Passwort eintragen → <b>„Neu im Team? Konto anlegen“</b>.</li>
-<li>Den Link in der Bestätigungs-E-Mail antippen (auch im Spam-Ordner nachsehen – Absender ist „noreply@…firebaseapp.com“).</li>
-<li>In Firebase: <b>Firestore Database</b> → „Sammlung starten“ → Sammlungs-ID <code>staff</code> → „Weiter“.</li>
-<li>Dokument-ID: die E-Mail-Adresse der Leitung <b>in Kleinbuchstaben</b>, z. B. <code>leitung@beispiel.de</code>. Feld: <code>role</code>, Typ „string“, Wert <code>leitung</code> → „Speichern“.</li>
-<li>Zurück in der App: „Ich habe bestätigt“ bzw. „Nochmal prüfen“ tippen. Oben steht jetzt „Angemeldet: Leitung“.</li></ol>
-<p>Ab jetzt schaltet die Leitung alle weiteren Personen direkt in der App frei: <b>„Einstellungen &amp; Team“ → E-Mail eintragen → „Freischalten“</b>. Firebase braucht ihr dafür nicht mehr.</p></li>
+<li>Firebase → <b>Authentication</b> → Reiter <b>„Nutzer“</b> → <b>„Nutzer hinzufügen“</b> → E-Mail und ein Passwort für die Leitung eintragen → „Nutzer hinzufügen“. (Steht die Adresse dort schon, diesen Punkt überspringen.)</li>
+<li>Firebase → <b>Firestore Database</b> → Reiter „Daten“ → <b>„Sammlung starten“</b> → Sammlungs-ID <code>staff</code> → „Weiter“.</li>
+<li>Dokument-ID: dieselbe E-Mail-Adresse <b>in Kleinbuchstaben</b>, z. B. <code>leitung@beispiel.de</code> (nicht „Automatische ID“). Feld: <code>role</code>, Typ „string“, Wert <code>leitung</code> → „Speichern“.</li>
+<li>Die App öffnen → oben <b>„Team-Anmeldung“</b> → mit dieser E-Mail und dem Passwort anmelden. Oben steht jetzt „Angemeldet: Leitung“.</li></ol>
+<p>Ab jetzt legt die Leitung alle weiteren Konten direkt in der App an: <b>„Einstellungen &amp; Team“ → E-Mail und Start-Passwort → „Konto anlegen“</b>. Die App zeigt die Zugangsdaten zum Weitergeben. Jede Person setzt danach unter „Konto“ ein eigenes Passwort. Bestätigungs-Mails gibt es nicht – das umgeht Probleme mit Outlook und Dienst-Postfächern.</p></li>
 
 <li style="--c:#FF7A3D"><h3>Link verteilen</h3><ul>
-<li><b>Team:</b> Link schicken. Jede Person legt sich mit der freigeschalteten E-Mail ein Konto an.</li>
+<li><b>Team:</b> Die Leitung legt die Konten in der App an und gibt die Zugangsdaten mit dem Link weiter.</li>
 <li><b>Eltern:</b> einfach den Link schicken oder als QR-Code am Eingang aushängen. Keine Anmeldung nötig – sie sehen nur die Bücherliste.</li>
 <li>Auf dem Handy: Link öffnen → „Zum Home-Bildschirm“. Dann erscheint die App mit eurem Logo.</li></ul></li>
 </ol>
@@ -174,11 +172,11 @@ service cloud.firestore {
 <tr><td>Team</td><td>angemeldet und freigeschaltet: alles, auch die Namen der Kinder</td></tr>
 <tr><td>Leitung</td><td>wie Team, zusätzlich: Kolleg:innen freischalten und entfernen</td></tr>
 </table>
-Das ist in den Sicherheitsregeln der Datenbank festgelegt – nicht nur in der Ansicht. Wer sich ein Konto anlegt, aber nicht freigeschaltet ist, sieht nur die Elternansicht.</div>
+Das ist in den Sicherheitsregeln der Datenbank festgelegt – nicht nur in der Ansicht. Wer ein Konto hat, aber nicht freigeschaltet ist, sieht nur die Elternansicht.</div>
 <div class="box"><b>Kosten:</b> Der kostenlose Tarif von Firebase und GitHub Pages reicht für eine Kita normalerweise locker. Ohne hinterlegte Zahlungsmethode kann auch nichts kosten – im schlimmsten Fall pausiert die Datenbank bis zum nächsten Tag.</div>
 <div class="box"><b>Öffentliches Repository:</b> Bei GitHub sind die App-Dateien öffentlich einsehbar. Das ist unbedenklich: Darin stehen keine Kinderdaten, nur der Programmcode und die Projektadresse.</div>
 <div class="box"><b>Titelsuche:</b> Beim Scannen schickt die App nur die ISBN-Nummer an Google Books bzw. Open Library, um Titel und Autor:in zu finden – keine Namen.</div>
-<div class="box"><b>Passwort vergessen?</b> In der App: „Team-Anmeldung“ → E-Mail eintragen → „Passwort vergessen“.</div>
+<div class="box"><b>Passwort vergessen?</b> In der App: „Team-Anmeldung“ → E-Mail eintragen → „Passwort vergessen“. Kommt keine Mail an (Outlook filtert sie gern weg): Die Leitung löscht das Konto in Firebase unter Authentication → Nutzer → ⋮ → „Konto löschen“ und legt es in der App unter „Einstellungen &amp; Team“ mit einem neuen Start-Passwort wieder an. Die Freischaltung bleibt dabei erhalten.</div>
 </main>
 <script>
 {document.addEventListener('click',async e=>{const b=e.target.closest('[data-copy]');if(!b)return;const t=document.getElementById(b.dataset.copy).textContent;try{await navigator.clipboard.writeText(t);b.textContent='Kopiert ✓'}catch(err){const r=document.createRange();r.selectNodeContents(document.getElementById(b.dataset.copy));const s=getSelection();s.removeAllRanges();s.addRange(r);b.textContent='Markiert – jetzt Strg+C'}})}

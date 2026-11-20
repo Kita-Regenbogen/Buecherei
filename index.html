@@ -230,7 +230,7 @@ textarea.copy{min-height:180px;font-size:13px;font-family:ui-monospace,monospace
 <li>Tippst du auf ein Buch oder ein Kind, siehst du den ganzen Verlauf.</li></ul></li>
 <li style="--c:#0FA3A3"><h3>Kategorien und Leihdauer</h3><p>Unter <b>„Einstellungen & Team“</b> kannst du Kategorien umbenennen, löschen oder neue anlegen (z. B. „Dinosaurier“) und die Leihdauer ändern.</p></li>
 <li style="--c:#E25DB0"><h3>Kolleg:innen und Eltern</h3><ul>
-<li><b>Neue Kolleg:in:</b> Die Leitung trägt die E-Mail-Adresse unter „Einstellungen & Team“ ein. Die Kolleg:in öffnet die App, tippt oben auf <b>„Team-Anmeldung“ → „Konto anlegen“</b>, wählt ein Passwort und bestätigt den Link in der E-Mail. Fertig.</li>
+<li><b>Neue Kolleg:in:</b> Die Leitung trägt unter „Einstellungen & Team“ E-Mail und Start-Passwort ein und tippt auf „Konto anlegen“. Die App zeigt die Zugangsdaten zum Weitergeben. Die Kolleg:in meldet sich oben über „Team-Anmeldung“ an und setzt unter „Konto“ ein eigenes Passwort.</li>
 <li><b>Eltern:</b> bekommen einfach den Link zur App. Sie brauchen keine Anmeldung und sehen nur die Bücherliste – keine Namen, keinen Verlauf.</li>
 <li>Verlässt jemand das Team, entfernt die Leitung den Zugang in der Liste.</li></ul></li>
 <li style="--c:#FF7A3D"><h3>Als App aufs Handy</h3><ul>
@@ -246,7 +246,7 @@ textarea.copy{min-height:180px;font-size:13px;font-family:ui-monospace,monospace
 <div id="toast" hidden><span id="toastT"></span><button id="toastU" data-act="undo" hidden>Rückgängig</button></div>
 <script>
 {
-const VERSION='2.0';
+const VERSION='2.1';
 const CFG=(window.KITA_CONFIG&&window.KITA_CONFIG.firebase)||{};
 const FB='https://www.gstatic.com/firebasejs/10.14.1/';
 const CATS=['Bilderbuch','Pappbilderbuch für die Kleinsten','Wimmelbuch','Fühl- & Klappenbuch','Tiere & Natur','Fahrzeuge & Technik','Mein Körper & Gesundheit','Berufe & die weite Welt','Märchen & Sagen','Vorlesegeschichten','Gute-Nacht-Geschichten','Reime, Lieder & Fingerspiele','Gefühle & Freundschaft','Alltag & Kita','Jahreszeiten & Feste','Zahlen, Farben & Formen','Erstes Lesen & ABC','Vielfalt & mehrsprachig','Rätsel & Mitmachen'];
@@ -257,7 +257,7 @@ const I={x:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-wi
  pen:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16v4z"/></svg>',
  bin:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>'};
 const S={books:{},kids:{},loans:{},staff:{},settings:{days:14,cats:CATS.slice()},loaded:false,priv:false,ro:true,user:null,role:null,synced:false,tab:'buecher',q:'',cat:'',st:'all',kq:''};
-let F=null,fs=null,auth=null,unsub=[],mRefresh=null,askRes=null,undoFn=null,toastT=0,lendSel=null,coverData='',scanStop=null,scanCb=null;
+let F=null,fs=null,auth=null,auth2=null,unsub=[],mRefresh=null,askRes=null,undoFn=null,toastT=0,lendSel=null,coverData='',scanStop=null,scanCb=null;
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const uid=p=>p+Date.now().toString(36)+Math.random().toString(36).slice(2,7);
@@ -291,8 +291,7 @@ function setMode(){document.body.classList.toggle('parent',S.ro);
  $('#mode').textContent=!F?'Lädt …':S.ro?'Ansicht für Eltern':S.role==='leitung'?'Angemeldet: Leitung':'Angemeldet: Team';
  $('#acct').textContent=S.user?'Konto':'Team-Anmeldung';
  const u=S.user;let n='';
- if(u&&!u.emailVerified)n=`Bitte bestätige noch deine E-Mail-Adresse. Wir haben einen Link an <b>${esc(u.email)}</b> geschickt.<div class="mfoot"><button class="btn sm primary" data-act="verified">Ich habe bestätigt</button><button class="btn sm light" data-act="resend">E-Mail nochmal senden</button></div>`;
- else if(u&&!S.role)n=`Dein Konto <b>${esc(u.email)}</b> ist noch nicht freigeschaltet. Bitte die Kita-Leitung, deine E-Mail-Adresse unter „Einstellungen & Team“ einzutragen.<div class="mfoot"><button class="btn sm primary" data-act="recheck">Nochmal prüfen</button><button class="btn sm light" data-act="logout">Abmelden</button></div>`;
+ if(u&&!S.role)n=`Dein Konto <b>${esc(u.email)}</b> ist noch nicht freigeschaltet. Bitte die Kita-Leitung, dich unter „Einstellungen & Team“ freizuschalten.<div class="mfoot"><button class="btn sm primary" data-act="recheck">Nochmal prüfen</button><button class="btn sm light" data-act="logout">Abmelden</button></div>`;
  $('#notice').innerHTML=n;$('#notice').hidden=!n}
 
 async function init(){
@@ -307,7 +306,7 @@ async function init(){
  let f2=true;F.onSnapshot(F.doc(fs,'settings','main'),d=>{if(d.exists()){const x=d.data();S.settings={days:+x.days||14,cats:Array.isArray(x.cats)?x.cats.map(String):CATS.slice()}}if(f2){f2=false;done()}render()},()=>{if(f2){f2=false;done()}});
  F.onAuthStateChanged(auth,u=>{S.user=u;checkStaff()})}
 async function checkStaff(){stop();S.role=null;S.ro=true;S.kids={};S.loans={};S.staff={};S.priv=false;const u=S.user;
- if(u&&u.emailVerified){try{const d=await F.getDoc(F.doc(fs,'staff',u.email.toLowerCase()));if(d.exists())S.role=d.data().role==='leitung'?'leitung':'team'}catch(e){}}
+ if(u&&u.email){try{const d=await F.getDoc(F.doc(fs,'staff',u.email.toLowerCase()));if(d.exists())S.role=d.data().role==='leitung'?'leitung':'team'}catch(e){}}
  if(S.role){S.ro=false;start()}setMode();route();render()}
 function start(){let pend=2;const done=()=>{if(--pend===0){S.priv=true;render();if(!S.synced){S.synced=true;reconcile()}}};
  for(const c of ['kids','loans']){let first=true;unsub.push(F.onSnapshot(F.collection(fs,c),snap=>{const m={};snap.forEach(d=>{m[d.id]=d.data()});S[c]=m;if(first){first=false;done()}render()},()=>{if(first){first=false;done()}}))}
@@ -356,14 +355,14 @@ const V={
   fill(){const el=$('#kl');if(!S.priv){el.innerHTML=loading();return}const t=today(),cur={};Object.values(activeMap()).forEach(([,l])=>{(cur[l.kid]=cur[l.kid]||[]).push(l)});
    const q=S.kq.trim().toLowerCase(),rows=Object.entries(S.kids).filter(([,k])=>!q||String(k.name).toLowerCase().includes(q)||String(k.group||'').toLowerCase().includes(q)).sort((a,b)=>String(a[1].name).localeCompare(String(b[1].name)));
    el.innerHTML=!Object.keys(S.kids).length?`<div class="empty"><b>Noch keine Kinder eingetragen</b>Trag die Kinder oben ein, oder leg sie direkt beim Ausleihen an.</div>`:`<div class="list">${rows.map(([id,k])=>{const c=cur[id]||[],late=c.some(l=>l.due<t);return `<div class="row" data-act="kid" data-id="${id}">${av(id,k)}<div><span class="rt">${esc(k.name)}</span><span class="rs">${esc(k.group||'ohne Gruppe')}</span></div>${c.length?`<span class="badge ${late?'late':'out'}">${c.length} ${c.length===1?'Buch':'Bücher'}</span>`:''}</div>`}).join('')}</div>`}},
- mehr:{skel:()=>`<div class="box"><h2>Team & Zugänge</h2><p class="hint" style="margin-top:0">Wer hier eingetragen ist, legt sich in der App mit genau dieser E-Mail-Adresse ein Konto an („Team-Anmeldung“ → „Konto anlegen“) und sieht dann alles, auch die Namen der Kinder. Eltern brauchen keinen Zugang.</p><form id="sf" class="addrow leitungonly" style="margin-top:12px"><input name="email" type="email" placeholder="E-Mail der Kollegin / des Kollegen" required autocomplete="off"><select name="role" style="flex:0 1 170px"><option value="team">Team</option><option value="leitung">Leitung</option></select><button class="btn sm primary">Freischalten</button></form><div id="tl"></div></div>
+ mehr:{skel:()=>`<div class="box"><h2>Team & Zugänge</h2><p class="hint" style="margin-top:0">Wer hier steht, kann sich anmelden und sieht alles, auch die Namen der Kinder. Eltern brauchen keinen Zugang.</p><form id="sf" class="leitungonly" style="margin-top:12px" autocomplete="off"><div class="two"><div class="field"><label for="sfe">E-Mail der Kollegin / des Kollegen</label><input id="sfe" name="email" type="email" required autocomplete="off"></div><div class="field"><label for="sfp">Start-Passwort</label><input id="sfp" name="pw" required minlength="6" autocomplete="new-password" value="${startPw()}"></div></div><div class="addrow" style="margin-top:10px"><select name="role" style="flex:0 1 170px"><option value="team">Team</option><option value="leitung">Leitung</option></select><button class="btn sm primary">Konto anlegen</button></div><p class="hint">Die App legt das Konto an und zeigt dir die Zugangsdaten zum Weitergeben. Das Passwort kann die Person danach selbst ändern.</p></form><div id="tl"></div></div>
   <div class="box"><h2>Kategorien</h2><form id="cf" class="addrow"><input name="c" placeholder="Neue Kategorie, z. B. Dinosaurier" required><button class="btn sm primary">Hinzufügen</button></form><div id="cl"></div></div>
   <div class="box"><h2>Ausleihe</h2><div class="field"><label for="days">Standard-Leihdauer in Tagen</label><input id="days" type="number" min="1" max="90" inputmode="numeric"></div></div>
   <div class="box"><h2>Datensicherung</h2><div class="mfoot" style="margin-top:0"><button class="btn sm light" data-act="exjson">Sicherung speichern</button><button class="btn sm light" data-act="excsv">Bücherliste (CSV)</button><label class="btn sm light leitungonly" for="impIn">Sicherung einspielen</label><input id="impIn" class="vh" type="file" accept=".json,application/json"></div><p class="hint">Die Daten liegen in eurer eigenen Firebase-Datenbank. Eine Sicherung ab und zu schadet trotzdem nicht.</p></div>`,
   fill(){const cnt={};Object.values(S.books).forEach(b=>cnt[b.cat]=(cnt[b.cat]||0)+1);const L=S.role==='leitung',me=S.user?S.user.email.toLowerCase():'';
    document.querySelectorAll('.leitungonly').forEach(e=>e.hidden=!L);
    const st=Object.entries(S.staff).sort((a,b)=>(a[1].role===b[1].role?a[0].localeCompare(b[0]):a[1].role==='leitung'?-1:1));
-   $('#tl').innerHTML=st.map(([em,x])=>`<div class="catrow"><span class="n">${esc(em)}${em===me?' <small>(du)</small>':''}</span><span class="badge ${x.role==='leitung'?'due':'out'}">${x.role==='leitung'?'Leitung':'Team'}</span>${L&&em!==me?`<button class="ib" data-act="delstaff" data-id="${esc(em)}" aria-label="Zugang entfernen">${I.bin}</button>`:''}</div>`).join('')+(L?'':'<p class="hint">Neue Kolleg:innen freischalten kann nur die Leitung.</p>');
+   $('#tl').innerHTML=st.map(([em,x])=>`<div class="catrow"><span class="n">${esc(em)}${em===me?' <small>(du)</small>':''}</span><span class="badge ${x.role==='leitung'?'due':'out'}">${x.role==='leitung'?'Leitung':'Team'}</span>${L&&em!==me?`<button class="ib" data-act="delstaff" data-id="${esc(em)}" aria-label="Zugang entfernen">${I.bin}</button>`:''}</div>`).join('')+(L?'':'<p class="hint">Neue Konten anlegen kann nur die Leitung.</p>');
    $('#cl').innerHTML=S.settings.cats.map((c,i)=>`<div class="catrow"><span class="dot" style="--c:${catColor(c)}"></span><span class="n">${esc(c)}</span><small>${cnt[c]||0} ${cnt[c]===1?'Buch':'Bücher'}</small><button class="ib" data-act="rencat" data-id="${i}" aria-label="Umbenennen">${I.pen}</button><button class="ib" data-act="delcat" data-id="${i}" aria-label="Löschen">${I.bin}</button></div>`).join('')+(cnt['']?`<div class="catrow"><span class="dot" style="--c:#9A93B5"></span><span class="n">Ohne Kategorie</span><small>${cnt['']} ${cnt['']===1?'Buch':'Bücher'}</small></div>`:'');
    const d=$('#days');if(document.activeElement!==d)d.value=S.settings.days||14}},
  anleitung:{fill(){},skel:()=>$('#guide').innerHTML}};
@@ -473,8 +472,14 @@ const AUTHMSG={'auth/invalid-credential':'E-Mail oder Passwort stimmt nicht.','a
 const amsg=e=>AUTHMSG[e&&e.code]||'Das hat nicht geklappt – bitte nochmal versuchen.';
 function openLogin(){openModal(`${X}<h2>Anmelden für das Team</h2><p class="hint" style="margin:2px 0 0">Eltern brauchen keine Anmeldung – sie sehen die Bücherliste auch so.</p>
  <form id="lf"><div class="field"><label for="le">E-Mail</label><input id="le" name="email" type="email" autocomplete="username" required></div><div class="field"><label for="lp">Passwort</label><input id="lp" name="pw" type="password" autocomplete="current-password" required></div><p class="err" id="lerr"></p><div class="mfoot"><button class="btn big primary wide">Anmelden</button></div></form>
- <div class="mfoot"><button class="btn sm light" data-act="register">Neu im Team? Konto anlegen</button><button class="btn sm light" data-act="reset">Passwort vergessen</button></div>`)}
-function openAccount(){const u=S.user;openModal(`${X}<h2>Dein Konto</h2><p>${esc(u.email)}</p><p class="hint">${S.role==='leitung'?'Du bist als Leitung freigeschaltet.':S.role?'Du bist als Team freigeschaltet.':u.emailVerified?'Noch nicht freigeschaltet.':'E-Mail noch nicht bestätigt.'}</p><div class="mfoot"><button class="btn sm light" data-act="reset">Passwort ändern</button><button class="btn sm danger" data-act="logout">Abmelden</button></div>`)}
+ <p class="hint">Noch kein Konto? Die Kita-Leitung legt es dir unter „Einstellungen & Team“ an.</p><div class="mfoot"><button class="btn sm light" data-act="reset">Passwort vergessen</button></div>`)}
+function openAccount(){const u=S.user;openModal(`${X}<h2>Dein Konto</h2><p style="margin:4px 0 0">${esc(u.email)}</p><p class="hint">${S.role==='leitung'?'Du bist als Leitung freigeschaltet.':S.role?'Du bist als Team freigeschaltet.':'Noch nicht freigeschaltet.'}</p>
+ <h3>Passwort ändern</h3><form id="pf"><div class="two"><div class="field"><label for="np1">Neues Passwort</label><input id="np1" name="p1" type="password" minlength="6" required autocomplete="new-password"></div><div class="field"><label for="np2">Noch einmal</label><input id="np2" name="p2" type="password" minlength="6" required autocomplete="new-password"></div></div><p class="err" id="perr"></p><div class="mfoot" style="margin-top:6px"><button class="btn sm primary">Passwort speichern</button></div></form>
+ <div class="mfoot"><button class="btn sm danger" data-act="logout">Abmelden</button></div>`)}
+function startPw(){const w=['Regenbogen','Buecherwurm','Sonnenschein','Leseratte','Wolkenschaf'];const a=new Uint32Array(2);crypto.getRandomValues(a);return w[a[0]%w.length]+'-'+String(1000+a[1]%9000)}
+async function createAccount(email,pw){if(!auth2){const app2=F.initializeApp(CFG,'konto-anlegen');auth2=F.getAuth(app2)}await F.createUserWithEmailAndPassword(auth2,email,pw);try{await F.signOut(auth2)}catch(e){}}
+function showCreds(email,pw){const link=location.href.split('#')[0];const txt=`Kita-Bücherei – dein Zugang\nLink: ${link}\nE-Mail: ${email}\nStart-Passwort: ${pw}\nBitte nach der ersten Anmeldung oben unter „Konto“ ein eigenes Passwort setzen.`;
+ openModal(`${X}<h2>Zugang angelegt</h2><p class="hint" style="margin:2px 0 10px">Gib diese Daten persönlich oder per Nachricht an die Person weiter.</p><textarea id="cred" readonly style="min-height:150px">${esc(txt)}</textarea><div class="mfoot"><button class="btn primary" data-act="copycred">Kopieren</button><button class="btn light" data-act="close">Fertig</button></div>`)}
 const lval=()=>({email:($('#le')||{}).value||'',pw:($('#lp')||{}).value||''});
 const lerr=t=>{const e=$('#lerr');if(e)e.textContent=t};
 
@@ -521,13 +526,10 @@ const ACT={close:closeModal,askok:()=>answer(true),askno:()=>answer(false),undo(
  exjson:()=>saveFile(`kita-buecherei-sicherung-${today()}.json`,JSON.stringify({books:S.books,kids:S.kids,loans:S.loans,settings:S.settings}),'application/json'),
  excsv:()=>saveFile(`kita-buecherei-buecher-${today()}.csv`,csv(),'text/csv'),
  account:()=>S.user?openAccount():openLogin(),
- async register(){const {email,pw}=lval();if(!email||!pw){lerr('Bitte oben E-Mail und ein neues Passwort (mind. 6 Zeichen) eintragen, dann hier tippen.');return}
-  try{busy('Konto wird angelegt …');const c=await F.createUserWithEmailAndPassword(auth,email.trim(),pw);await F.sendEmailVerification(c.user);busy('');closeModal();toast('Fast fertig: Bitte bestätige den Link in deiner E-Mail')}catch(e){busy('');lerr(amsg(e))}},
  async reset(){const email=S.user?S.user.email:lval().email.trim();if(!email){lerr('Bitte oben deine E-Mail eintragen, dann hier tippen.');return}
   try{await F.sendPasswordResetEmail(auth,email);closeModal();toast('Wir haben dir eine E-Mail zum Zurücksetzen geschickt')}catch(e){lerr(amsg(e));if(!$('#lerr'))toast(amsg(e))}},
  async logout(){closeModal();await F.signOut(auth);toast('Abgemeldet')},
- async verified(){try{await S.user.reload();await S.user.getIdToken(true);S.user=auth.currentUser;await checkStaff();if(!S.user.emailVerified)toast('Noch nicht bestätigt – bitte den Link in der E-Mail antippen')}catch(e){toast(amsg(e))}},
- async resend(){try{await F.sendEmailVerification(S.user);toast('E-Mail ist unterwegs')}catch(e){toast(amsg(e))}},
+ async copycred(){const t=$('#cred');try{await navigator.clipboard.writeText(t.value);toast('Kopiert')}catch(e){t.select();toast('Markiert – jetzt kopieren')}},
  async recheck(){await checkStaff();if(!S.role)toast('Noch nicht freigeschaltet')}};
 document.addEventListener('click',e=>{const t=e.target.closest('[data-act]');if(!t||t.tagName==='LABEL')return;const f=ACT[t.dataset.act];if(f){e.preventDefault();e.stopPropagation();f(t.dataset.id)}});
 document.addEventListener('input',e=>{const id=e.target.id;if(id==='q'){S.q=e.target.value;V.buecher.fill()}else if(id==='kq'){S.kq=e.target.value;V.kinder.fill()}else if(id==='lq')fillPick()});
@@ -547,7 +549,12 @@ document.addEventListener('submit',async e=>{e.preventDefault();const f=e.target
  else if(f.id==='rf'){const i=+f.dataset.id,old=S.settings.cats[i],c=v('c');closeModal();if(!c||c===old)return;if(S.settings.cats.includes(c)){toast('Die Kategorie gibt es schon');return}
   S.settings.cats=S.settings.cats.map((x,j)=>j===i?c:x);await putSettings();for(const [id,b] of Object.entries(S.books))if(b.cat===old)await put('books',id,Object.assign({},b,{cat:c}),true);render()}
  else if(f.id==='mf'){const cb=scanCb||handleCode;closeModal();cb(v('code'))}
- else if(f.id==='sf'){const em=v('email').toLowerCase();if(!em.includes('@'))return;await put('staff',em,{role:v('role')==='leitung'?'leitung':'team',added:today(),by:S.user.email});f.reset();toast(em+' ist freigeschaltet')}
+ else if(f.id==='sf'){const em=v('email').toLowerCase(),pw=f.elements.pw.value,role=v('role')==='leitung'?'leitung':'team';if(!em.includes('@'))return;if(pw.length<6){toast('Das Start-Passwort braucht mindestens 6 Zeichen');return}
+  const had=S.staff[em];let fresh=true;
+  try{busy('Konto wird angelegt …');await createAccount(em,pw);busy('')}catch(err){busy('');if(err&&err.code==='auth/email-already-in-use'){if(had){toast(em+' ist schon freigeschaltet und hat ein Konto');return}if(!await ask(`Für ${em} gibt es schon ein Konto. Trotzdem freischalten? Nur wenn du sicher bist, dass es dieser Person gehört – sie meldet sich dann mit ihrem bisherigen Passwort an.`,'Freischalten'))return;fresh=false}else{toast(amsg(err));return}}
+  if(!had)await put('staff',em,{role,added:today(),by:S.user.email});f.elements.email.value='';f.elements.pw.value=startPw();if(fresh)showCreds(em,pw);else toast(em+' ist freigeschaltet')}
+ else if(f.id==='pf'){const p1=f.elements.p1.value,p2=f.elements.p2.value,e=$('#perr');if(p1!==p2){e.textContent='Die beiden Passwörter sind nicht gleich.';return}if(p1.length<6){e.textContent='Mindestens 6 Zeichen, bitte.';return}
+  try{busy('Speichern …');await F.updatePassword(S.user,p1);busy('');closeModal();toast('Neues Passwort gespeichert')}catch(err){busy('');e.textContent=err&&err.code==='auth/requires-recent-login'?'Aus Sicherheitsgründen bitte einmal ab- und wieder anmelden, dann klappt es.':amsg(err)}}
  else if(f.id==='lf'){const {email,pw}=lval();lerr('');try{busy('Anmelden …');await F.signInWithEmailAndPassword(auth,email.trim(),pw);busy('');closeModal();toast('Willkommen!')}catch(err){busy('');lerr(amsg(err))}}});
 
 $('#ver').textContent=VERSION;
